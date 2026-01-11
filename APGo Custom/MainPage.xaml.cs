@@ -32,12 +32,16 @@ public partial class MainPage : ContentPage
 
     public void DoRefresh(object? state)
     {
-        if (!_needsRefresh || _session is null) return;
-
-        _needsRefresh = false;
-
         MainThread.BeginInvokeOnMainThread(async () =>
         {
+            if (_session != null && !_session.Socket.Connected)
+            {
+                await APConnectionHelpers.DisconnectFromArchipelago(this, MapWebView, ConnectionButton);
+                return;
+            }
+            if (!_needsRefresh || _session is null) return;
+
+            _needsRefresh = false;
             System.Diagnostics.Debug.WriteLine("Refreshing map markers");
 
             var checkedLocations = _session.Locations.AllLocationsChecked;
