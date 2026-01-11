@@ -1,0 +1,128 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />
+    <link rel='stylesheet' href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css' />
+    <script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            height: 100vh;
+            width: 100vw;
+        }
+    </style>
+</head>
+<body>
+    <div id='map'></div>
+    <script>
+        var map = L.map('map').setView([37.0902, -95.7129], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        var userMarker = null;
+        var userCircle = null;
+
+        // Update marker position without centering
+        function updateLocationMarker(lat, lng) {
+            // Remove old marker and circle if they exist
+            if (userMarker) {
+                map.removeLayer(userMarker);
+            }
+            if (userCircle) {
+                map.removeLayer(userCircle);
+            }
+
+            // Add blue circle for accuracy radius
+            userCircle = L.circle([lat, lng], {
+                color: '#4285F4',
+                fillColor: '#4285F4',
+                fillOpacity: 0.2,
+                radius: 20,
+                interactive: false 
+            }).addTo(map);
+
+            // Add blue dot marker
+            userMarker = L.circleMarker([lat, lng], {
+                color: 'white',
+                fillColor: '#4285F4',
+                fillOpacity: 1,
+                weight: 2,
+                radius: 8
+            }).addTo(map);
+        }
+
+        // Update location AND center map (used by button)
+        function updateLocation(lat, lng) {
+            updateLocationMarker(lat, lng);
+            // Center map on user location
+            map.setView([lat, lng], 16);
+        }
+
+        var pressTimer, pressLatLng, startX, startY;
+        map.on('contextmenu', (e) => L.DomEvent.preventDefault(e));
+
+        map.getContainer().addEventListener('touchstart', (e) => {
+            if (e.touches.length !== 1) return;
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            pressLatLng = map.containerPointToLatLng([startX, startY]);
+            pressTimer = setTimeout(() => {
+                window.location = 'mapclick://' + pressLatLng.lat + ',' + pressLatLng.lng;
+                navigator.vibrate?.(50);
+            }, 500);
+        }, { passive: true });
+
+        map.getContainer().addEventListener('touchend', () => clearTimeout(pressTimer));
+
+        map.getContainer().addEventListener('touchmove', (e) => {
+            if (!e.touches[0]) return;
+            var dx = Math.abs(e.touches[0].clientX - startX);
+            var dy = Math.abs(e.touches[0].clientY - startY);
+            if (dx > 10 || dy > 10) clearTimeout(pressTimer);
+        });
+
+        var markers = [];
+
+        function addMarker(lat, lng) {
+            var marker = L.circleMarker([lat, lng], {
+                color: 'darkred',
+                fillColor: 'red',
+                fillOpacity: 0.8,
+                weight: 2,
+                radius: 8
+            }).addTo(map);
+
+            marker.on('click', function (e) {
+                L.DomEvent.stopPropagation(e); // Prevent map click
+                var index = markers.indexOf(marker);
+                window.location = 'markerclick://' + index;
+            });
+
+            markers.push(marker);
+        }
+
+        function removeMarker(index) {
+            if (markers[index]) {
+                map.removeLayer(markers[index]);
+                markers.splice(index, 1);
+            }
+        }
+        function checkProximity(userLat, userLng, distanceMeters) {
+            for (var i = 0; i < markers.length; i++) {
+                var markerLatLng = markers[i].getLatLng();
+                var distance = map.distance([userLat, userLng], [markerLatLng.lat, markerLatLng.lng]);
+
+                if (distance <= distanceMeters) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    </script>
+</body>
+</html>
