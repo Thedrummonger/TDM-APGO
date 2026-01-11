@@ -86,12 +86,12 @@
             if (dx > 10 || dy > 10) clearTimeout(pressTimer);
         });
 
-        var markers = [];
+        var markers = {};
 
-        function addMarker(lat, lng) {
+        function addMarker(lat, lng, id, clr, fl) {
             var marker = L.circleMarker([lat, lng], {
-                color: 'darkred',
-                fillColor: 'red',
+                color: clr,
+                fillColor: fl,
                 fillOpacity: 0.8,
                 weight: 2,
                 radius: 8
@@ -99,11 +99,10 @@
 
             marker.on('click', function (e) {
                 L.DomEvent.stopPropagation(e); // Prevent map click
-                var index = markers.indexOf(marker);
-                window.location = 'markerclick://' + index;
+                window.location = 'markerclick://' + id;
             });
 
-            markers.push(marker);
+            markers[id] = marker;
         }
 
         function removeMarker(index) {
@@ -112,16 +111,32 @@
                 markers.splice(index, 1);
             }
         }
+        function clearAllMarkers() {
+            for (var id in markers) {
+                map.removeLayer(markers[id]);
+            }
+            markers = {};
+        }
         function checkProximity(userLat, userLng, distanceMeters) {
-            for (var i = 0; i < markers.length; i++) {
-                var markerLatLng = markers[i].getLatLng();
+            var nearbyIds = [];
+            for (var id in markers) {
+                var markerLatLng = markers[id].getLatLng();
                 var distance = map.distance([userLat, userLng], [markerLatLng.lat, markerLatLng.lng]);
 
                 if (distance <= distanceMeters) {
-                    return true;
+                    nearbyIds.push(id);
                 }
             }
-            return false;
+            return nearbyIds.length > 0 ? nearbyIds.join(',') : '';
+        }
+
+        function updateMarkerColor(id, borderColor, fillColor) {
+            if (markers[id]) {
+                markers[id].setStyle({
+                    color: borderColor,
+                    fillColor: fillColor
+                });
+            }
         }
     </script>
 </body>
