@@ -6,6 +6,22 @@
     <Grid>
         <WebView x:Name="MapWebView" />
 
+        <!-- Connection status button -->
+        <Button 
+            x:Name="ConnectionButton"
+            Text="🔴"
+            FontSize="20"
+            WidthRequest="50"
+            HeightRequest="50"
+            CornerRadius="25"
+            BackgroundColor="White"
+            TextColor="Black"
+            Clicked="OnConnectionButtonClicked"
+            HorizontalOptions="End"
+            VerticalOptions="Start"
+            Margin="0,10,10,0"
+            Shadow="{Shadow Brush=Black, Opacity=0.3, Radius=5, Offset='2,2'}" />
+
         <!-- Location button overlay -->
         <Button 
             Text="📍"
@@ -18,7 +34,7 @@
             Clicked="OnLocationButtonClicked"
             HorizontalOptions="End"
             VerticalOptions="Start"
-            Margin="10,10,0,0"
+            Margin="0,80,10,0"
             Shadow="{Shadow Brush=Black, Opacity=0.3, Radius=5, Offset='2,2'}" />
     </Grid>
 

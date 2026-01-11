@@ -1,13 +1,27 @@
-﻿namespace APGo_Custom;
+﻿
+using Archipelago.MultiClient.Net;
+using System.Text.Json;
+
+namespace APGo_Custom;
 
 public partial class MainPage : ContentPage
 {
     private bool _isTracking = false;
+    private List<Location> _setupLocations = new List<Location>();
+    private Dictionary<string, long> _activeLocationMapping = new Dictionary<string, long>();
+    private ArchipelagoSession? _session = null;
+    private string? _currentRoomHash = null;
 
     public MainPage()
     {
         InitializeComponent();
-        LoadMap();
+        _ = InitializeAsync();
+    }
+
+    private async Task InitializeAsync()
+    {
+        await LoadMapAsync();
+        await LoadSetupLocations();
         StartLocationTracking();
     }
 
@@ -80,7 +94,8 @@ public partial class MainPage : ContentPage
         }
     }
 
-    private async void LoadMap()
+    private bool _mapLoaded = false;
+    private async Task LoadMapAsync()
     {
         using var stream = await FileSystem.OpenAppPackageFileAsync("map.html");
         using var reader = new StreamReader(stream);
@@ -91,6 +106,16 @@ public partial class MainPage : ContentPage
         };
         MapWebView.Source = htmlSource;
         MapWebView.Navigating += OnMapNavigating;
+
+        // Wait for the map to actually load
+        var tcs = new TaskCompletionSource<bool>();
+        MapWebView.Navigated += (s, e) =>
+        {
+            _mapLoaded = true;
+            tcs.TrySetResult(true);
+        };
+        await tcs.Task;
+        await Task.Delay(500); // Small delay to ensure JavaScript is ready
     }
 
     protected override void OnDisappearing()
@@ -110,8 +135,15 @@ public partial class MainPage : ContentPage
 
             if (parts.Length == 2)
             {
-                var lat = parts[0];
-                var lng = parts[1];
+                var lat = double.Parse(parts[0]);
+                var lng = double.Parse(parts[1]);
+
+                var location = new Location(lat, lng);
+                if (_setupLocations.Any(l => l.Id == location.Id))
+                {
+                    await DisplayAlert("Duplicate", "A marker already exists at this location!", "OK");
+                    return;
+                }
 
                 bool answer = await DisplayAlert("Add Location",
                 $"Add marker at this location?\nLat: {lat}\nLng: {lng}",
@@ -119,8 +151,11 @@ public partial class MainPage : ContentPage
 
                 if (answer)
                 {
-                    await MapWebView.EvaluateJavaScriptAsync(
-                        $"addMarker({lat}, {lng});");
+                    _setupLocations.Add(location);
+
+                    await MapWebView.EvaluateJavaScriptAsync($"addMarker({lat}, {lng}, '{location.Id}');");
+
+                    await SaveSetupLocations();
                 }
             }
         }
@@ -128,7 +163,7 @@ public partial class MainPage : ContentPage
         {
             e.Cancel = true;
 
-            var indexStr = e.Url.Replace("markerclick://", "");
+            var locationId = e.Url.Replace("markerclick://", "");
 
             bool answer = await DisplayAlert("Remove Marker",
                 "Do you want to remove this marker?",
@@ -136,9 +171,161 @@ public partial class MainPage : ContentPage
 
             if (answer)
             {
-                await MapWebView.EvaluateJavaScriptAsync(
-                    $"removeMarker({indexStr});");
+                var location = _setupLocations.FirstOrDefault(l => l.Id == locationId);
+                if (location != null)
+                {
+                    _setupLocations.Remove(location);
+                    await SaveSetupLocations();
+                }
+
+                await MapWebView.EvaluateJavaScriptAsync($"removeMarker('{locationId}');");
             }
         }
+    }
+    private async Task SaveSetupLocations()
+    {
+        var json = JsonSerializer.Serialize(_setupLocations);
+        var filePath = Path.Combine(FileSystem.AppDataDirectory, "setup_locations.json");
+        await File.WriteAllTextAsync(filePath, json);
+        System.Diagnostics.Debug.WriteLine($"Saved {_setupLocations.Count} locations to: {filePath}");
+    }
+
+    private async Task LoadSetupLocations()
+    {
+        var filePath = Path.Combine(FileSystem.AppDataDirectory, "setup_locations.json");
+        System.Diagnostics.Debug.WriteLine($"Looking for locations at: {filePath}");
+
+        if (File.Exists(filePath))
+        {
+            var json = await File.ReadAllTextAsync(filePath);
+            System.Diagnostics.Debug.WriteLine($"File content: {json}");
+
+            _setupLocations = JsonSerializer.Deserialize<List<Location>>(json) ?? new List<Location>();
+            System.Diagnostics.Debug.WriteLine($"Loaded {_setupLocations.Count} locations");
+
+            // Render them on the map
+            foreach (var loc in _setupLocations)
+            {
+                await MapWebView.EvaluateJavaScriptAsync(
+                    $"addMarker({loc.Latitude}, {loc.Longitude}, '{loc.Id}');");
+            }
+        }
+        else
+        {
+            System.Diagnostics.Debug.WriteLine("No saved locations file found");
+        }
+    }
+    private async Task SaveSeedMapping(string roomHash)
+    {
+        var json = JsonSerializer.Serialize(_activeLocationMapping);
+        var filePath = Path.Combine(FileSystem.AppDataDirectory, $"seed_{roomHash}.json");
+        await File.WriteAllTextAsync(filePath, json);
+        System.Diagnostics.Debug.WriteLine($"Saved mapping for seed: {roomHash}");
+    }
+
+    private async Task<Dictionary<string, long>> LoadSeedMapping(string roomHash)
+    {
+        var filePath = Path.Combine(FileSystem.AppDataDirectory, $"seed_{roomHash}.json");
+        if (File.Exists(filePath))
+        {
+            var json = await File.ReadAllTextAsync(filePath);
+            var mapping = JsonSerializer.Deserialize<Dictionary<string, long>>(json);
+            System.Diagnostics.Debug.WriteLine($"Loaded mapping for seed: {roomHash}");
+            return mapping;
+        }
+        System.Diagnostics.Debug.WriteLine($"No mapping found for seed: {roomHash}");
+        return null;
+    }
+    private async void OnConnectionButtonClicked(object sender, EventArgs e)
+    {
+        if (_session != null)
+        {
+            bool disconnect = await DisplayAlert("Disconnect",
+                "Do you want to disconnect from Archipelago?",
+                "Yes", "No");
+
+            if (disconnect)
+            {
+                DisconnectFromArchipelago();
+            }
+        }
+        else
+        {
+            await ShowConnectionDialog();
+        }
+    }
+
+    private async Task ShowConnectionDialog()
+    {
+        string address = await DisplayPromptAsync("Connect", "Server Address:",
+            initialValue: "archipelago.gg",
+            placeholder: "archipelago.gg");
+
+        if (string.IsNullOrWhiteSpace(address))
+            return;
+
+        string portStr = await DisplayPromptAsync("Connect", "Port:",
+            initialValue: "38281",
+            keyboard: Keyboard.Numeric);
+
+        if (string.IsNullOrWhiteSpace(portStr) || !int.TryParse(portStr, out int port))
+            return;
+
+        string slotName = await DisplayPromptAsync("Connect", "Slot Name:",
+            placeholder: "Player1");
+
+        if (string.IsNullOrWhiteSpace(slotName))
+            return;
+
+        string password = await DisplayPromptAsync("Connect", "Password (optional):",
+            placeholder: "Leave blank if none");
+
+        await ConnectToArchipelago(address, port, slotName, password ?? "");
+    }
+
+    private async Task ConnectToArchipelago(string host, int port, string slotName, string password)
+    {
+        try
+        {
+            _session = ArchipelagoSessionFactory.CreateSession(host, port);
+            var result = _session.TryConnectAndLogin("Archipela-Go!", slotName, Archipelago.MultiClient.Net.Enums.ItemsHandlingFlags.AllItems, password: password);
+
+            if (result is LoginFailure failure)
+            {
+                await DisplayAlert("Connection Failed", string.Join("\n", failure.Errors), "OK");
+                _session = null;
+                return;
+            }
+
+            // Update button to green
+            ConnectionButton.Text = "🟢";
+
+            _currentRoomHash = $"{_session.RoomState.Seed}_{slotName}";
+
+            await DisplayAlert("Connected", "Successfully connected to Archipelago!", "OK");
+
+            // TODO: Next step - load/assign locations
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error", $"Failed to connect: {ex.Message}", "OK");
+            _session = null;
+        }
+    }
+
+    private void DisconnectFromArchipelago()
+    {
+        _session?.Socket.DisconnectAsync();
+        _session = null;
+        _currentRoomHash = null;
+        _activeLocationMapping.Clear();
+
+        // Update button to red
+        ConnectionButton.Text = "🔴";
+
+        // Clear markers from map
+        MapWebView.EvaluateJavaScriptAsync("clearAllMarkers();");
+
+        DisplayAlert("Disconnected", "Disconnected from Archipelago", "OK");
     }
 }

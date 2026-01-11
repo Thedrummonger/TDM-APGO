@@ -68,6 +68,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Archipelago.MultiClient.Net" Version="6.7.0" />
 		<PackageReference Include="Mapsui" Version="5.0.2" />
 		<PackageReference Include="Mapsui.Maui" Version="5.0.2" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
