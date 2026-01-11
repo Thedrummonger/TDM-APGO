@@ -2,29 +2,29 @@
 
 namespace APGo_Custom
 {
-    public class Location
+    public class BaseLocation
     {
         public double Latitude { get; set; }
         public double Longitude { get; set; }
         public string Id => $"{Latitude:F6}_{Longitude:F6}";
 
-        public Location() { }
+        public BaseLocation() { }
 
-        public Location(double lat, double lng)
+        public BaseLocation(double lat, double lng)
         {
             Latitude = lat;
             Longitude = lng;
         }
     }
 
-    public class APLocation : Location
+    public class APLocation : BaseLocation
     {
         public long ArchipelagoLocationId { get; set; } = -1;
         public string ArchipelagoLocationName { get; set; } = "";
         public int KeysRequired { get; set; } = 0;
 
         public APLocation() { }
-        public APLocation(Location location, long APLocID, string APLocName, int keys)
+        public APLocation(BaseLocation location, long APLocID, string APLocName, int keys)
         {
             Latitude = location.Latitude;
             Longitude = location.Longitude;
@@ -32,6 +32,22 @@ namespace APGo_Custom
             ArchipelagoLocationName = APLocName;
             KeysRequired = keys;
         }
+    }
+
+    public class ConnectionDetails
+    {
+        public ConnectionDetails() { }
+        public ConnectionDetails(string host, int port, string slotName, string password)
+        {
+            Host = host;
+            Port = port;
+            Slot = slotName;
+            Password = password;
+        }
+        public string? Host { get; set; }
+        public int? Port { get; set; }
+        public string? Slot { get; set; }
+        public string? Password { get; set; }
     }
 
     public class Trip
