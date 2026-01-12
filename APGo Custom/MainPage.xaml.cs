@@ -22,6 +22,8 @@ public partial class MainPage : ContentPage
     private Timer? _chatProcessTimer = null;
     private const int MaxMessagesPerSecond = 10;
 
+    public int MarkerRadius = 20;
+
     public MainPage()
     {
         InitializeComponent();
@@ -79,7 +81,7 @@ public partial class MainPage : ContentPage
 
             if (location != null)
             {
-                await MapWebView.EvaluateJavaScriptAsync($"updateLocation({location.Latitude}, {location.Longitude});");
+                await MapWebView.EvaluateJavaScriptAsync($"updateLocation({location.Latitude}, {location.Longitude}, {MarkerRadius});");
             }
         }
         catch (Exception ex)
@@ -96,16 +98,18 @@ public partial class MainPage : ContentPage
 
     public async void OnMapNavigating(object? sender, WebNavigatingEventArgs e)
     {
-        if (_session == null)
+        if (e.Url.StartsWith("mapholdclick://"))
         {
-            if (e.Url.StartsWith("mapclick://"))
+            e.Cancel = true;
+            if (_session == null) 
                 await MarkerHelpers.AddMarker(this, e, MapWebView);
-            else if (e.Url.StartsWith("markerclick://"))
-                await MarkerHelpers.RemoveMarker(this, e, MapWebView);
         }
-        else
+        else if (e.Url.StartsWith("markerclick://"))
         {
-            if (e.Url.StartsWith("markerclick://"))
+            e.Cancel = true;
+            if (_session == null)
+                await MarkerHelpers.RemoveMarker(this, e, MapWebView);
+            else
                 await APLocationHelpers.DisplayLocationDetails(this, e);
         }
     }

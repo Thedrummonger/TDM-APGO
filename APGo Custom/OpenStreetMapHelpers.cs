@@ -62,7 +62,7 @@ namespace APGo_Custom
 
                 MainThread.BeginInvokeOnMainThread(async () =>
                 {
-                    await _map.EvaluateJavaScriptAsync($"updateLocationMarker({location.Latitude}, {location.Longitude});");
+                    await _map.EvaluateJavaScriptAsync($"updateLocationMarker({location.Latitude}, {location.Longitude}, {_parent.MarkerRadius});");
                     APLocationHelpers.CheckLocationProximity(_parent, _map, location);
                 });
             }
@@ -103,7 +103,7 @@ namespace APGo_Custom
 
                     await MainThread.InvokeOnMainThreadAsync(async () =>
                     {
-                        await Map.EvaluateJavaScriptAsync($"updateLocationMarker({location.Latitude}, {location.Longitude});");
+                        await Map.EvaluateJavaScriptAsync($"updateLocationMarker({location.Latitude}, {location.Longitude}, {Parent.MarkerRadius});");
                         APLocationHelpers.CheckLocationProximity(Parent, Map, location);
                     });
                 }

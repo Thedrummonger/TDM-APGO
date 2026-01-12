@@ -38,7 +38,7 @@ namespace APGo_Custom
             if (parent._session == null)
                 return;
 
-            var result = await Map.EvaluateJavaScriptAsync($"checkProximity({GeoLocation.Latitude}, {GeoLocation.Longitude}, 20);");
+            var result = await Map.EvaluateJavaScriptAsync($"checkProximity({GeoLocation.Latitude}, {GeoLocation.Longitude}, {parent.MarkerRadius});");
             var cleanResult = result?.Trim('"') ?? "";
 
             if (string.IsNullOrEmpty(cleanResult))

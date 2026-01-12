@@ -28,7 +28,7 @@
         var userCircle = null;
 
         // Update marker position without centering
-        function updateLocationMarker(lat, lng) {
+        function updateLocationMarker(lat, lng, rad) {
             // Remove old marker and circle if they exist
             if (userMarker) {
                 map.removeLayer(userMarker);
@@ -42,7 +42,7 @@
                 color: '#4285F4',
                 fillColor: '#4285F4',
                 fillOpacity: 0.2,
-                radius: 20,
+                radius: rad,
                 interactive: false 
             }).addTo(map);
 
@@ -57,8 +57,8 @@
         }
 
         // Update location AND center map (used by button)
-        function updateLocation(lat, lng) {
-            updateLocationMarker(lat, lng);
+        function updateLocation(lat, lng, rad) {
+            updateLocationMarker(lat, lng, rad);
             // Center map on user location
             map.setView([lat, lng], 16);
         }
@@ -72,7 +72,7 @@
             startY = e.touches[0].clientY;
             pressLatLng = map.containerPointToLatLng([startX, startY]);
             pressTimer = setTimeout(() => {
-                window.location = 'mapclick://' + pressLatLng.lat + ',' + pressLatLng.lng;
+                window.location = 'mapholdclick://' + pressLatLng.lat + ',' + pressLatLng.lng;
                 navigator.vibrate?.(50);
             }, 500);
         }, { passive: true });
