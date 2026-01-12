@@ -24,6 +24,8 @@ public partial class MainPage : ContentPage
 
     public int MarkerRadius = 20;
 
+    public HashSet<char> GoalItemsRecieved = [];
+
     public MainPage()
     {
         InitializeComponent();
@@ -65,6 +67,13 @@ public partial class MainPage : ContentPage
 
                 (string borderColor, string fillColor) = MarkerHelpers.GetMarkerColor(_session, mapping.Value);
                 await MapWebView.EvaluateJavaScriptAsync($"updateMarkerColor('{mapping.Value.Id}', '{borderColor}', '{fillColor}');");
+            }
+
+            foreach (var i in _session.Items.AllItemsReceived)
+            {
+                //Track the "letter" items for the goal
+                if (i.ItemName.Length == 1 && APLocationHelpers.LongGoal.Contains(i.ItemName[0]))
+                    GoalItemsRecieved.Add(i.ItemName[0]);
             }
         });
     }

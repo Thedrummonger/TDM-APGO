@@ -11,6 +11,21 @@ namespace APGo_Custom
 {
     public static class APLocationHelpers
     {
+        public const string LongGoal = "Archipela-Go!";
+        public const string ShortGoal = "Ap-Go!";
+        public static bool HasGoal(MainPage parent)
+        {
+            if (parent._session == null || !parent._session.Socket.Connected) return false;
+            var HasLongGoal = LongGoal.All(parent.GoalItemsRecieved.Contains);
+            var HasShortGoal = ShortGoal.All(parent.GoalItemsRecieved.Contains);
+            //Do some saftey checks for this one to make sure we don't goal early. Just checking AllMissingLocations could be dangerous
+            var HasAllLocationGoal =
+                parent._session.Locations.AllLocations.Count > 0 &&
+                parent._session.Locations.AllLocationsChecked.Count == parent._session.Locations.AllLocations.Count;
+            bool OneLongTripGoal = false; //IDK how this one is calculated, unsupported for now
+            return HasLongGoal || HasShortGoal || HasAllLocationGoal || OneLongTripGoal; //TODO: Actually check based on slot data goal
+        }
+
         public static async Task DisplayLocationDetails(MainPage parent, WebNavigatingEventArgs e)
         {
             e.Cancel = true;
