@@ -1,5 +1,6 @@
 ﻿
 using Archipelago.MultiClient.Net;
+using Archipelago.MultiClient.Net.MessageLog.Messages;
 using Archipelago.MultiClient.Net.Packets;
 using Newtonsoft.Json.Linq;
 using System.Diagnostics;
@@ -149,6 +150,8 @@ public partial class MainPage : ContentPage
 
     public void OnArchipelagoMessageReceived(Archipelago.MultiClient.Net.MessageLog.Messages.LogMessage message)
     {
+        if (message is HintItemSendLogMessage)
+            _needsRefresh = true;
         Debug.WriteLine($"Chat Message Recieved: {message}");
         _chatMessageQueue.Enqueue(message);
     }

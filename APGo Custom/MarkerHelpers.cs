@@ -67,24 +67,15 @@ namespace APGo_Custom
         public static (string border, string fill) GetMarkerColor(ArchipelagoSession session, APLocation location)
         {
             var CurrentKeyCount = session.Items.AllItemsReceived.Where(x => x.ItemName == "Progressive Key").Count();
-            string borderColor, fillColor;
-            System.Diagnostics.Debug.WriteLine($"Debug | Curernt Keys {CurrentKeyCount}| {location.ArchipelagoLocationName} Keys {location.KeysRequired}");
-            if (location.KeysRequired > CurrentKeyCount)
+            var IsUnlocked = location.KeysRequired <= CurrentKeyCount;
+            var IsHinted = APLocationHelpers.IsLocationHinted(location, session, out _);
+            return (IsHinted, IsUnlocked) switch
             {
-                borderColor = "darkred";
-                fillColor = "red";
-            }
-            else if (APLocationHelpers.IsLocationHinted(location, session, out _))
-            {
-                borderColor = "darkblue";
-                fillColor = "blue";
-            }
-            else
-            {
-                borderColor = "darkgreen";
-                fillColor = "green";
-            }
-            return (borderColor, fillColor);
+                (true, true) => ("darkblue", "blue"),
+                (true, false) => ("purple", "mediumpurple"),
+                (false, true) => ("darkgreen", "green"),
+                (false, false) => ("darkred", "red")
+            };
         }
 
         public static async Task RenderTemplateLocations(MainPage parent, WebView Map)
