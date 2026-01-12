@@ -25,6 +25,7 @@ public partial class MainPage : ContentPage
     public int MarkerRadius = 20;
 
     public HashSet<char> GoalItemsRecieved = [];
+    public GoalSetting GoalSetting = GoalSetting.option_short_macguffin;
 
     public MainPage()
     {
@@ -75,6 +76,8 @@ public partial class MainPage : ContentPage
                 if (i.ItemName.Length == 1 && APLocationHelpers.LongGoal.Contains(i.ItemName[0]))
                     GoalItemsRecieved.Add(i.ItemName[0]);
             }
+            if (APLocationHelpers.HasGoal(this))
+                _session.SetGoalAchieved();
         });
     }
 

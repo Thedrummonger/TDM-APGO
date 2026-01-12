@@ -2,6 +2,14 @@
 
 namespace APGo_Custom
 {
+
+    public enum GoalSetting
+    {
+        option_one_hard_travel = 0,
+        option_allsanity = 1,
+        option_short_macguffin = 2,
+        option_long_macguffin = 3,
+    }
     public class BaseLocation
     {
         public double Latitude { get; set; }

@@ -16,14 +16,23 @@ namespace APGo_Custom
         public static bool HasGoal(MainPage parent)
         {
             if (parent._session == null || !parent._session.Socket.Connected) return false;
-            var HasLongGoal = LongGoal.All(parent.GoalItemsRecieved.Contains);
-            var HasShortGoal = ShortGoal.All(parent.GoalItemsRecieved.Contains);
-            //Do some saftey checks for this one to make sure we don't goal early. Just checking AllMissingLocations could be dangerous
-            var HasAllLocationGoal =
-                parent._session.Locations.AllLocations.Count > 0 &&
-                parent._session.Locations.AllLocationsChecked.Count == parent._session.Locations.AllLocations.Count;
-            bool OneLongTripGoal = false; //IDK how this one is calculated, unsupported for now
-            return HasLongGoal || HasShortGoal || HasAllLocationGoal || OneLongTripGoal; //TODO: Actually check based on slot data goal
+            switch (parent.GoalSetting)
+            {
+                case GoalSetting.option_one_hard_travel:
+                    return false; //IDK how this one is calculated, unsupported for now
+                case GoalSetting.option_allsanity:
+                    //Do some saftey checks for this one to make sure we don't goal early. Just checking AllMissingLocations could be dangerous
+                    //If it is not initialized and is 0. Also make sure AllLocations is initialized before comapring to AllLocationsChecked 
+                    return
+                        parent._session.Locations.AllLocations.Count > 0 && 
+                        parent._session.Locations.AllLocationsChecked.Count == parent._session.Locations.AllLocations.Count; ;
+                case GoalSetting.option_short_macguffin:
+                    return ShortGoal.All(parent.GoalItemsRecieved.Contains);
+                case GoalSetting.option_long_macguffin:
+                    return LongGoal.All(parent.GoalItemsRecieved.Contains);
+                default:
+                    return false;
+            }
         }
 
         public static async Task DisplayLocationDetails(MainPage parent, WebNavigatingEventArgs e)

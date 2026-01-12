@@ -96,27 +96,21 @@ namespace APGo_Custom
                 else
                 {
                     var slotData = parent._session.DataStorage.GetSlotData();
-                    if (!slotData.TryGetValue("trips", out var tripsData))
+                    if (!slotData.TryGetValue("trips", out var tripsData) || tripsData is not JObject tripsObj)
                     {
-                        await parent.DisplayAlert("Error", "No trips data found in slot data", "OK");
-                        await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
-                        return;
-                    }
-
-                    if (tripsData is not JObject tripsObj)
-                    {
-                        await parent.DisplayAlert("Error", "Failed to deserialize trips", "OK");
+                        await parent.DisplayAlert("Error", "Could not parse trips data in slot data", "OK");
                         await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
                         return;
                     }
                     var trips = tripsObj.ToObject<Dictionary<string, Trip>>();
-
-                    if (trips == null)
+                    if (!slotData.TryGetValue("goal", out var goalData) || goalData is not long goalVal)
                     {
-                        await parent.DisplayAlert("Error", "Failed to deserialize trips", "OK");
+                        await parent.DisplayAlert("Error", "Could not parse Goal data in slot data", "OK");
                         await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
                         return;
                     }
+
+                    parent.GoalSetting = (GoalSetting) goalData;
 
                     if (trips == null || trips.Count == 0)
                     {
