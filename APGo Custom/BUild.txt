@@ -1,0 +1,1 @@
+dotnet publish "APGo Custom.csproj" -c Release -f:net9.0-android -p:PublishAab=false -p:AndroidSupportedAbis=arm64-v8a -o ./publish

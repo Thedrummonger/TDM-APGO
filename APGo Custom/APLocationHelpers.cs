@@ -20,6 +20,22 @@ namespace APGo_Custom
 
         }
 
+        public static async void CheckLocationProximity(MainPage parent, WebView Map, Location GeoLocation)
+        {
+            if (parent._session == null)
+                return;
+
+            var result = await Map.EvaluateJavaScriptAsync($"checkProximity({GeoLocation.Latitude}, {GeoLocation.Longitude}, 20);");
+            var cleanResult = result?.Trim('"') ?? "";
+
+            if (string.IsNullOrEmpty(cleanResult))
+                return;
+
+            var locationIds = cleanResult.Split(',');
+            foreach (var locationId in locationIds)
+                await CheckLocation(parent, locationId.Trim(), Map);
+        }
+
         public static async Task CheckLocation(MainPage parent, string locationId, WebView Map)
         {
             if (parent._session == null || !parent._activeLocationMapping.ContainsKey(locationId))

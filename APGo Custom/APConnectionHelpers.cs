@@ -99,14 +99,14 @@ namespace APGo_Custom
                     if (!slotData.TryGetValue("trips", out var tripsData))
                     {
                         await parent.DisplayAlert("Error", "No trips data found in slot data", "OK");
-                        await DisconnectFromArchipelago(parent, Map, ConnetionButton);
+                        await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
                         return;
                     }
 
                     if (tripsData is not JObject tripsObj)
                     {
                         await parent.DisplayAlert("Error", "Failed to deserialize trips", "OK");
-                        await DisconnectFromArchipelago(parent, Map, ConnetionButton);
+                        await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
                         return;
                     }
                     var trips = tripsObj.ToObject<Dictionary<string, Trip>>();
@@ -114,14 +114,14 @@ namespace APGo_Custom
                     if (trips == null)
                     {
                         await parent.DisplayAlert("Error", "Failed to deserialize trips", "OK");
-                        await DisconnectFromArchipelago(parent, Map, ConnetionButton);
+                        await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
                         return;
                     }
 
                     if (trips == null || trips.Count == 0)
                     {
                         await parent.DisplayAlert("Error", "Failed to parse trips data", "OK");
-                        await DisconnectFromArchipelago(parent, Map, ConnetionButton);
+                        await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
                         return;
                     }
                     System.Diagnostics.Debug.WriteLine($"Found {trips.Count} trips in slot data");
@@ -130,13 +130,14 @@ namespace APGo_Custom
 
                     if (!await APLocationHelpers.AssignLocationsToTrips(parent, trips))
                     {
-                        await DisconnectFromArchipelago(parent, Map, ConnetionButton);
+                        await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
                         return;
                     }
                 }
                 await MarkerHelpers.RenderActiveLocations(parent, Map);
                 parent._session.Items.ItemReceived += parent.OnItemReceived;
                 parent._session.Locations.CheckedLocationsUpdated += parent.OnLocationsChecked;
+                parent._session.MessageLog.OnMessageReceived += parent.OnArchipelagoMessageReceived;
                 await DataFileHelpers.SaveLastConnectionCache(connectionDetails);
             }
             catch (Exception ex)
@@ -146,12 +147,16 @@ namespace APGo_Custom
             }
         }
 
-        public static async Task DisconnectFromArchipelago(MainPage parent, WebView Map, Button ConnetionButton)
+        public static async Task DisconnectFromArchipelago(MainPage parent, WebView Map, Button ConnetionButton, bool Early = false)
         {
             if (parent._session != null)
             {
-                parent._session.Items.ItemReceived -= parent.OnItemReceived;
-                parent._session.Locations.CheckedLocationsUpdated -= parent.OnLocationsChecked;
+                if (!Early)
+                {
+                    parent._session.Items.ItemReceived -= parent.OnItemReceived;
+                    parent._session.Locations.CheckedLocationsUpdated -= parent.OnLocationsChecked;
+                    parent._session.MessageLog.OnMessageReceived -= parent.OnArchipelagoMessageReceived;
+                }
                 if (parent._session.Socket != null && parent._session.Socket.Connected)
                     await parent._session.Socket.DisconnectAsync();
             }
