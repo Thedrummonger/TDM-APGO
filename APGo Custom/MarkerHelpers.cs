@@ -68,14 +68,13 @@ namespace APGo_Custom
         {
             var CurrentKeyCount = session.Items.AllItemsReceived.Where(x => x.ItemName == "Progressive Key").Count();
             string borderColor, fillColor;
-            bool isHinted = false; // TODO: Add hinted logic later
             System.Diagnostics.Debug.WriteLine($"Debug | Curernt Keys {CurrentKeyCount}| {location.ArchipelagoLocationName} Keys {location.KeysRequired}");
             if (location.KeysRequired > CurrentKeyCount)
             {
                 borderColor = "darkred";
                 fillColor = "red";
             }
-            else if (isHinted)
+            else if (APLocationHelpers.IsLocationHinted(location, session, out _))
             {
                 borderColor = "darkblue";
                 fillColor = "blue";

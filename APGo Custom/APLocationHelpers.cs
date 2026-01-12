@@ -1,4 +1,6 @@
-﻿using Microsoft.Maui.Platform;
+﻿using Archipelago.MultiClient.Net;
+using Archipelago.MultiClient.Net.Models;
+using Microsoft.Maui.Platform;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,16 +9,27 @@ using System.Threading.Tasks;
 
 namespace APGo_Custom
 {
-    internal class APLocationHelpers
+    public static class APLocationHelpers
     {
         public static async Task DisplayLocationDetails(MainPage parent, WebNavigatingEventArgs e)
         {
             e.Cancel = true;
+            if (parent._session == null || !parent._session.Socket.Connected) return;
             var locationId = e.Url.Replace("markerclick://", "");
             if (!parent._activeLocationMapping.TryGetValue(locationId, out var Data))
                 return;
+            StringBuilder stringBuilder = new StringBuilder($"Keys Required {Data.KeysRequired}");
+            if (Data.IsLocationHinted(parent._session, out var Hint))
+            {
+                var RecievingPlayer = parent._session.Players.GetPlayerInfo(Hint!.ReceivingPlayer);
+                var Item = parent._session.Items.GetItemName(Hint!.ItemId, RecievingPlayer.Game);
+                var Important = Hint.ItemFlags.HasFlag(Archipelago.MultiClient.Net.Enums.ItemFlags.Advancement);
+                var Usefull = Hint.ItemFlags.HasFlag(Archipelago.MultiClient.Net.Enums.ItemFlags.NeverExclude);
+                string Usefullness = Important ? "Progression" : (Usefull ? "Usefull" : "Junk");
+                stringBuilder.AppendLine().AppendLine($"Containes {Item} for {RecievingPlayer.Name} playing {RecievingPlayer.Game} ({Usefullness})");
+            }
 
-            await parent.DisplayAlert(Data.ArchipelagoLocationName, $"Keys Required {Data.KeysRequired}", "OK");
+            await parent.DisplayAlert(Data.ArchipelagoLocationName, stringBuilder.ToString(), "OK");
 
         }
 
@@ -135,6 +148,14 @@ namespace APGo_Custom
 
             await DataFileHelpers.SaveSeedMapping(parent);
             return true;
+        }
+
+        public static bool IsLocationHinted(this APLocation location, ArchipelagoSession session, out Hint? hint)
+        {
+            var Hints = session.DataStorage.GetHints();
+            var CurrentPlayer = session.Players.ActivePlayer.Slot;
+            hint = Hints.FirstOrDefault(x => x.FindingPlayer == CurrentPlayer && x.LocationId == location.ArchipelagoLocationId);
+            return hint is not null;
         }
     }
 }
