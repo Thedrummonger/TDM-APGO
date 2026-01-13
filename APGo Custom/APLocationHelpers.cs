@@ -54,16 +54,12 @@ namespace APGo_Custom
             }
 
             //await parent.DisplayAlert(Data.ArchipelagoLocationName, stringBuilder.ToString(), "OK");
-            var dialog = new CustomDialog(Data.ArchipelagoLocationName, stringBuilder.ToString(), "Mark Complete", "Get Hint", "Close");
+            var dialog = new CustomDialog(Data.ArchipelagoLocationName, stringBuilder.ToString(), "Get Hint", "Close");
 
             await parent.Navigation.PushModalAsync(dialog);
             var result = await dialog.ShowAsync();
 
-            if (result == "Mark Complete")
-            {
-                //NYI
-            }
-            else if (result == "Get Hint")
+            if (result == "Get Hint")
             {
                 parent._session.Say($"!hint_location {Data.ArchipelagoLocationName}");
             }
