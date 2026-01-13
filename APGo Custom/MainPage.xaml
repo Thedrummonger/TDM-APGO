@@ -83,5 +83,20 @@
             Grid.Row="0"
             Margin="0,150,10,0"
             Shadow="{Shadow Brush=Black, Opacity=0.3, Radius=5, Offset='2,2'}" />
-    </Grid>
+        <!-- Settings button overlay -->
+        <Button 
+            Text="⚙️"
+            FontSize="20"
+            WidthRequest="50"
+            HeightRequest="50"
+            CornerRadius="25"
+            BackgroundColor="White"
+            TextColor="Black"
+            Clicked="OnSettingsClicked"
+            HorizontalOptions="Start"
+            VerticalOptions="Start"
+            Grid.Row="0"
+            Margin="0,80,10,0"
+            Shadow="{Shadow Brush=Black, Opacity=0.3, Radius=5, Offset='2,2'}" />
+            </Grid>
 </ContentPage>

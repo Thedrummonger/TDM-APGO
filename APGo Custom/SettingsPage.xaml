@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="APGo_Custom.SettingsPage"
+             Title="Connection Settings">
+    <VerticalStackLayout Padding="20" Spacing="15">
+        <Label Text="Server Address:" />
+        <Entry x:Name="ServerEntry" 
+               Placeholder="archipelago.gg" 
+               TextChanged="OnServerChanged" />
+
+        <Label Text="Port:" />
+        <Entry x:Name="PortEntry" 
+               Placeholder="38281" 
+               Keyboard="Numeric"
+               TextChanged="OnPortChanged" />
+
+        <Label Text="Slot Name:" />
+        <Entry x:Name="SlotEntry" 
+               Placeholder="Player1"
+               TextChanged="OnSlotChanged" />
+
+        <Label Text="Password (optional):" />
+        <Entry x:Name="PasswordEntry" 
+               Placeholder="Leave blank if none" 
+               IsPassword="True"
+               TextChanged="OnPasswordChanged" />
+
+        <Button Text="Close" Clicked="OnCloseClicked" />
+    </VerticalStackLayout>
+</ContentPage>

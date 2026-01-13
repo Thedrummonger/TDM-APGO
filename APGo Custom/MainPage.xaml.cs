@@ -27,6 +27,8 @@ public partial class MainPage : ContentPage
     public HashSet<char> GoalItemsRecieved = [];
     public GoalSetting GoalSetting = GoalSetting.option_short_macguffin;
 
+    public SettingsPage SettingsPage;
+
     public MainPage()
     {
         InitializeComponent();
@@ -35,6 +37,8 @@ public partial class MainPage : ContentPage
 
     private async Task InitializeAsync()
     {
+        var ConnectionCache = await DataFileHelpers.LoadLastConnectionCache();
+        SettingsPage = new SettingsPage(this, ConnectionCache);
         await OpenStreetMapHelpers.LoadMapAsync(this, MapWebView);
         await DataFileHelpers.LoadSetupLocations(this, MapWebView);
         OpenStreetMapHelpers.StartLocationTracking(this, MapWebView);
@@ -162,6 +166,12 @@ public partial class MainPage : ContentPage
 
         _session.Say(ChatInput.Text);
         ChatInput.Text = "";
+    }
+
+    private async void OnSettingsClicked(object sender, EventArgs e)
+    {
+        if (SettingsPage is null) return;
+        await Navigation.PushModalAsync(SettingsPage);
     }
 
     public void OnArchipelagoMessageReceived(Archipelago.MultiClient.Net.MessageLog.Messages.LogMessage message)
