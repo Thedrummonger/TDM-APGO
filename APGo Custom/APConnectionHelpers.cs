@@ -57,17 +57,18 @@ namespace APGo_Custom
 
         public static async Task ConnectToArchipelago(MainPage parent, WebView Map, ConnectionDetails connectionDetails, Button ConnetionButton)
         {
-            ConnetionButton.Text = "🟡";
             try
             {
-                parent._chatMessageQueue.Enqueue($"Connecting to {connectionDetails.Slot}@{connectionDetails.Host ?? ""}:{connectionDetails.Port ?? 0}");
+                ConnetionButton.Text = "🟡";
+                parent.AddChatMessage($"Connecting to {connectionDetails.Slot}@{connectionDetails.Host ?? ""}:{connectionDetails.Port ?? 0}");
                 parent._session = ArchipelagoSessionFactory.CreateSession(connectionDetails.Host ?? "", connectionDetails.Port ?? 0);
+                await Task.Delay(200);
                 var result = parent._session.TryConnectAndLogin("Archipela-Go!", connectionDetails.Slot,
                     Archipelago.MultiClient.Net.Enums.ItemsHandlingFlags.AllItems, password: connectionDetails.Password);
 
                 if (result is LoginFailure failure)
                 {
-                    await parent.DisplayAlert("Connection Failed", string.Join("\n", failure.Errors), "OK");
+                    parent.AddChatMessage("Connection Failed: " + string.Join("\n", failure.Errors));
                     parent._session = null;
                     ConnetionButton.Text = "🔴";
                     return;
@@ -80,7 +81,7 @@ namespace APGo_Custom
 
                 await DataFileHelpers.SaveLastConnectionCache(connectionDetails);
 
-                parent._chatMessageQueue.Enqueue($"Successfully connected to Archipelago!");
+                parent.AddChatMessage($"Successfully connected to Archipelago!");
                 //await parent.DisplayAlert("Connected", "Successfully connected to Archipelago!", "OK");
 
                 Dictionary<string, APLocation>? savedMapping = await DataFileHelpers.LoadSeedMapping(parent._currentRoomHash);
@@ -95,7 +96,7 @@ namespace APGo_Custom
                     var slotData = parent._session.DataStorage.GetSlotData();
                     if (!slotData.TryGetValue("trips", out var tripsData) || tripsData is not JObject tripsObj)
                     {
-                        parent._chatMessageQueue.Enqueue($"Could not parse trips data in slot data!");
+                        parent.AddChatMessage($"Could not parse trips data in slot data!");
                         //await parent.DisplayAlert("Error", "Could not parse trips data in slot data", "OK");
                         await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
                         return;
@@ -103,24 +104,20 @@ namespace APGo_Custom
                     var trips = tripsObj.ToObject<Dictionary<string, Trip>>();
                     if (!slotData.TryGetValue("goal", out var goalData) || goalData is not long goalVal)
                     {
-                        parent._chatMessageQueue.Enqueue($"Could not parse Goal data in slot data!");
+                        parent.AddChatMessage($"Could not parse Goal data in slot data!");
                         //await parent.DisplayAlert("Error", "Could not parse Goal data in slot data", "OK");
                         await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
                         return;
                     }
-                    Debug.WriteLine($"goalData int {goalVal}");
                     parent.GoalSetting = (GoalSetting)goalVal;
 
                     if (trips == null || trips.Count == 0)
                     {
-                        parent._chatMessageQueue.Enqueue($"Failed to parse trips data!");
+                        parent.AddChatMessage($"Failed to parse trips data!");
                         //await parent.DisplayAlert("Error", "Failed to parse trips data", "OK");
                         await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
                         return;
                     }
-                    System.Diagnostics.Debug.WriteLine($"Found {trips.Count} trips in slot data");
-
-                    System.Diagnostics.Debug.WriteLine($"FullTripsDict {JsonSerializer.Serialize(trips)}");
 
                     if (!await APLocationHelpers.AssignLocationsToTrips(parent, trips))
                     {
@@ -139,7 +136,7 @@ namespace APGo_Custom
             }
             catch (Exception ex)
             {
-                parent._chatMessageQueue.Enqueue($"Failed to connect: {ex.Message}");
+                parent.AddChatMessage($"Failed to connect: {ex.Message}");
                 //await parent.DisplayAlert("Error", $"Failed to connect: {ex.Message}", "OK");
                 await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
                 parent._session = null;
@@ -169,7 +166,7 @@ namespace APGo_Custom
             // Clear markers from map
             await Map.EvaluateJavaScriptAsync("clearAllMarkers();");
 
-            parent._chatMessageQueue.Enqueue($"Disconnected from Archipelago");
+            parent.AddChatMessage($"Disconnected from Archipelago");
             //await parent.DisplayAlert("Disconnected", "Disconnected from Archipelago", "OK");
 
             await MarkerHelpers.RenderTemplateLocations(parent, Map);

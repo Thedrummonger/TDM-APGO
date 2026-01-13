@@ -117,5 +117,59 @@ namespace APGo_Custom
             if (File.Exists(filePath))
                 File.Delete(filePath);
         }
+
+
+
+        public static async Task<bool> SaveFileAsync(string jsonContent, string defaultFileName)
+        {
+            try
+            {
+                var tempPath = Path.Combine(FileSystem.CacheDirectory, defaultFileName);
+                await File.WriteAllTextAsync(tempPath, jsonContent);
+
+                await Share.Default.RequestAsync(new ShareFileRequest
+                {
+                    Title = "Save File",
+                    File = new ShareFile(tempPath)
+                });
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Save file error: {ex.Message}");
+                return false;
+            }
+        }
+
+        public static async Task<T?> LoadFileAsync<T>() where T : class
+        {
+            try
+            {
+                var result = await FilePicker.Default.PickAsync(new PickOptions
+                {
+                    PickerTitle = "Select a JSON file",
+                    FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+            {
+                { DevicePlatform.Android, new[] { "application/json", "text/plain" } },
+                { DevicePlatform.iOS, new[] { "public.json", "public.plain-text" } }
+            })
+                });
+
+                if (result == null)
+                    return null;
+
+                using var stream = await result.OpenReadAsync();
+                using var reader = new StreamReader(stream);
+                var json = await reader.ReadToEndAsync();
+
+                return JsonSerializer.Deserialize<T>(json);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Load file error: {ex.Message}");
+                return null;
+            }
+        }
     }
 }

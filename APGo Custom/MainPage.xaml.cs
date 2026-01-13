@@ -209,11 +209,11 @@ public partial class MainPage : ContentPage
         _isAtBottom = e.ScrollY >= scrollHeight - 50;
     }
 
-    private void AddChatMessage(object message)
+    public void AddChatMessage(object message)
     {
         var label = new Label
         {
-            Padding = new Thickness(5),
+            Padding = new Thickness(3),
             LineBreakMode = LineBreakMode.WordWrap
         };
         if (message is LogMessage APLogMessage)

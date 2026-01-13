@@ -24,26 +24,55 @@
                    Placeholder="Leave blank if none" 
                    IsPassword="True"
                    TextChanged="OnPasswordChanged" />
-
             <BoxView HeightRequest="2" Color="Gray" Margin="0,10,0,10" />
-
             <Label x:Name="ProximityLabel" Text="Proximity Range:" />
             <Slider x:Name="ProximitySlider"
                     Minimum="5"
                     Maximum="60"
                     ValueChanged="OnProximityChanged" />
-
             <BoxView HeightRequest="2" Color="Gray" Margin="0,10,0,10" />
-
             <Label Text="Data Management" FontSize="20" FontAttributes="Bold" />
-            <Button Text="Clear Valid Locations" 
-                    Clicked="OnClearValidLocationsClicked"
-                    BackgroundColor="Gray"
-                    TextColor="White" />
-            <Button Text="Clear Seed Data" 
-                    Clicked="OnClearSeedDataClicked"
-                    BackgroundColor="Gray"
-                    TextColor="White" />
+
+            <!-- Valid Locations section -->
+            <Label Text="Valid Locations" FontSize="16" FontAttributes="Bold" Margin="0,10,0,0" />
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="5">
+                <Button Grid.Column="0"
+                        Text="Clear" 
+                        Clicked="OnClearValidLocationsClicked"
+                        BackgroundColor="Red"
+                        TextColor="White" />
+                <Button Grid.Column="1"
+                        Text="Export" 
+                        Clicked="OnExportValidLocationsClicked"
+                        BackgroundColor="Orange"
+                        TextColor="White" />
+                <Button Grid.Column="2"
+                        Text="Load" 
+                        Clicked="OnLoadValidLocationsClicked"
+                        BackgroundColor="Green"
+                        TextColor="White" />
+            </Grid>
+
+            <!-- Seed Data section -->
+            <Label Text="Seed Data" FontSize="16" FontAttributes="Bold" Margin="0,10,0,0" />
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="5">
+                <Button Grid.Column="0"
+                        Text="Clear" 
+                        Clicked="OnClearSeedDataClicked"
+                        BackgroundColor="Red"
+                        TextColor="White" />
+                <Button Grid.Column="1"
+                        Text="Export" 
+                        Clicked="OnExportSeedDataClicked"
+                        BackgroundColor="Orange"
+                        TextColor="White" />
+                <Button Grid.Column="2"
+                        Text="Load" 
+                        Clicked="OnLoadSeedDataClicked"
+                        BackgroundColor="Green"
+                        TextColor="White" />
+            </Grid>
+
             <BoxView HeightRequest="2" Color="Gray" Margin="0,10,0,10" />
             <Button Text="Close" 
                     Clicked="OnCloseClicked"
