@@ -93,10 +93,10 @@
             BackgroundColor="White"
             TextColor="Black"
             Clicked="OnSettingsClicked"
-            HorizontalOptions="Start"
+            HorizontalOptions="End"
             VerticalOptions="Start"
             Grid.Row="0"
-            Margin="0,80,10,0"
+            Margin="0,220,10,0"
             Shadow="{Shadow Brush=Black, Opacity=0.3, Radius=5, Offset='2,2'}" />
             </Grid>
 </ContentPage>

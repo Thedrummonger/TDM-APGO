@@ -38,7 +38,7 @@ public partial class MainPage : ContentPage
     private async Task InitializeAsync()
     {
         var ConnectionCache = await DataFileHelpers.LoadLastConnectionCache();
-        SettingsPage = new SettingsPage(this, ConnectionCache);
+        SettingsPage = new SettingsPage(this, ConnectionCache, MapWebView);
         await OpenStreetMapHelpers.LoadMapAsync(this, MapWebView);
         await DataFileHelpers.LoadSetupLocations(this, MapWebView);
         OpenStreetMapHelpers.StartLocationTracking(this, MapWebView);
@@ -126,7 +126,9 @@ public partial class MainPage : ContentPage
         }
         else
         {
-            await APConnectionHelpers.ShowConnectionDialog(this, MapWebView, ConnectionButton);
+            //await APConnectionHelpers.ShowConnectionDialog(this, MapWebView, ConnectionButton);
+            var TempConnectionDetails = new ConnectionDetails(SettingsPage.ServerAddress, SettingsPage.Port, SettingsPage.SlotName, SettingsPage.Password);
+            await APConnectionHelpers.ConnectToArchipelago(this, MapWebView, TempConnectionDetails, ConnectionButton);
         }
     }
     

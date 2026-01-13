@@ -3,6 +3,7 @@ using Microsoft.Maui.Platform;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -69,9 +70,6 @@ namespace APGo_Custom
                     return;
                 }
 
-                // Update button to green
-                ConnetionButton.Text = "🟢";
-
                 parent._currentRoomHash = $"{parent._session.RoomState.Seed}_{connectionDetails.Slot}";
 
                 // Clear markers from map
@@ -79,16 +77,11 @@ namespace APGo_Custom
 
                 await DataFileHelpers.SaveLastConnectionCache(connectionDetails);
 
-                await parent.DisplayAlert("Connected", "Successfully connected to Archipelago!", "OK");
+                //await parent.DisplayAlert("Connected", "Successfully connected to Archipelago!", "OK");
 
                 Dictionary<string, APLocation>? savedMapping = await DataFileHelpers.LoadSeedMapping(parent._currentRoomHash);
 
-                async Task<bool> ShouldLoadSavedData()
-                {
-                    return await parent.DisplayAlert("Load Save File","Do you want to loadteh saved seed?","Yes", "No");
-                }
-
-                if (savedMapping != null && await ShouldLoadSavedData())
+                if (savedMapping != null)
                 {
                     parent._activeLocationMapping = savedMapping;
                     System.Diagnostics.Debug.WriteLine($"Loaded existing mapping with {parent._activeLocationMapping.Count} locations");
@@ -109,8 +102,8 @@ namespace APGo_Custom
                         await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
                         return;
                     }
-
-                    parent.GoalSetting = (GoalSetting) goalData;
+                    Debug.WriteLine($"goalData int {goalVal}");
+                    parent.GoalSetting = (GoalSetting)goalVal;
 
                     if (trips == null || trips.Count == 0)
                     {
@@ -133,10 +126,14 @@ namespace APGo_Custom
                 parent._session.Locations.CheckedLocationsUpdated += parent.OnLocationsChecked;
                 parent._session.MessageLog.OnMessageReceived += parent.OnArchipelagoMessageReceived;
                 await DataFileHelpers.SaveLastConnectionCache(connectionDetails);
+
+                // Update button to green
+                ConnetionButton.Text = "🟢";
             }
             catch (Exception ex)
             {
                 await parent.DisplayAlert("Error", $"Failed to connect: {ex.Message}", "OK");
+                await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
                 parent._session = null;
             }
         }
@@ -164,7 +161,7 @@ namespace APGo_Custom
             // Clear markers from map
             await Map.EvaluateJavaScriptAsync("clearAllMarkers();");
 
-            await parent.DisplayAlert("Disconnected", "Disconnected from Archipelago", "OK");
+            //await parent.DisplayAlert("Disconnected", "Disconnected from Archipelago", "OK");
 
             await MarkerHelpers.RenderTemplateLocations(parent, Map);
         }

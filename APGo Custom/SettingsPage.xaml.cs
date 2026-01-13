@@ -3,26 +3,33 @@ namespace APGo_Custom;
 public partial class SettingsPage : ContentPage
 {
     private readonly MainPage MainPage;
-    public SettingsPage(MainPage parent, ConnectionDetails? connectionCache)
+    private readonly WebView MainMap;
+    public SettingsPage(MainPage parent, ConnectionDetails? connectionCache, WebView Map)
     {
         InitializeComponent();
 
         ServerAddress = connectionCache?.Host ?? "archipelago.gg";
-        Port = connectionCache?.Port?.ToString() ?? "38281";
+        Port = connectionCache?.Port ?? 38281;
         SlotName = connectionCache?.Slot ?? string.Empty;
         Password = connectionCache?.Password ?? string.Empty;
 
         MainPage = parent;
         ServerEntry.Text = ServerAddress;
-        PortEntry.Text = Port;
+        PortEntry.Text = Port.ToString();
         SlotEntry.Text = SlotName;
         PasswordEntry.Text = Password;
-    }
+        MainMap = Map;
+    }   
 
     public string ServerAddress;
-    public string Port;
+    public int Port;
     public string SlotName;
     public string Password;
+
+    public ConnectionDetails GetConnectionDetails()
+    {
+        return new ConnectionDetails(ServerAddress, Port, SlotName, Password);
+    }
 
     private void OnServerChanged(object sender, TextChangedEventArgs e)
     {
@@ -31,7 +38,8 @@ public partial class SettingsPage : ContentPage
 
     private void OnPortChanged(object sender, TextChangedEventArgs e)
     {
-        Port = e.NewTextValue;
+        if (int.TryParse(e.NewTextValue, out var newPort))
+            Port = newPort;
     }
 
     private void OnSlotChanged(object sender, TextChangedEventArgs e)
@@ -47,5 +55,57 @@ public partial class SettingsPage : ContentPage
     private async void OnCloseClicked(object sender, EventArgs e)
     {
         await Navigation.PopModalAsync();
+    }
+
+    private async void OnClearConnectionCacheClicked(object sender, EventArgs e)
+    {
+        if (MainPage._session != null)
+        {
+            await MainPage.DisplayAlert("Not Available", "You must first discconect from your current session", "OK");
+            return;
+        }
+
+        bool confirm = await DisplayAlert("Clear Connection Cache",
+            "Are you sure you want to clear saved connection settings?",
+            "Yes", "No");
+
+        if (confirm)
+            DataFileHelpers.ClearLastConnectionCache();
+    }
+
+    private async void OnClearValidLocationsClicked(object sender, EventArgs e)
+    {
+        if (MainPage._session != null)
+        {
+            await MainPage.DisplayAlert("Not Available", "You must first discconect from your current session", "OK");
+            return;
+        }
+
+        bool confirm = await DisplayAlert("Clear Valid Locations",
+            "Are you sure you want to clear all valid locations? This cannot be undone.",
+            "Yes", "No");
+
+        if (confirm)
+        {
+            DataFileHelpers.ClearSetupLocations();
+            MainPage._setupLocations.Clear();
+            await MainMap.EvaluateJavaScriptAsync("clearAllMarkers();");
+        }
+    }
+
+    private async void OnClearSeedDataClicked(object sender, EventArgs e)
+    {
+        if (MainPage._session != null)
+        {
+            await MainPage.DisplayAlert("Not Available", "You must first discconect from your current session", "OK");
+            return;
+        }
+
+        bool confirm = await DisplayAlert("Clear Seed Data",
+            "Are you sure you want to clear all seed data? This cannot be undone.",
+            "Yes", "No");
+
+        if (confirm)
+            DataFileHelpers.RemoveSeedMappings();
     }
 }

@@ -3,29 +3,57 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="APGo_Custom.SettingsPage"
              Title="Connection Settings">
-    <VerticalStackLayout Padding="20" Spacing="15">
-        <Label Text="Server Address:" />
-        <Entry x:Name="ServerEntry" 
-               Placeholder="archipelago.gg" 
-               TextChanged="OnServerChanged" />
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="15">
+            <Label Text="Connection Settings" FontSize="20" FontAttributes="Bold" />
 
-        <Label Text="Port:" />
-        <Entry x:Name="PortEntry" 
-               Placeholder="38281" 
-               Keyboard="Numeric"
-               TextChanged="OnPortChanged" />
+            <Label Text="Server Address:" />
+            <Entry x:Name="ServerEntry" 
+                   Placeholder="archipelago.gg" 
+                   TextChanged="OnServerChanged" />
 
-        <Label Text="Slot Name:" />
-        <Entry x:Name="SlotEntry" 
-               Placeholder="Player1"
-               TextChanged="OnSlotChanged" />
+            <Label Text="Port:" />
+            <Entry x:Name="PortEntry" 
+                   Placeholder="38281" 
+                   Keyboard="Numeric"
+                   TextChanged="OnPortChanged" />
 
-        <Label Text="Password (optional):" />
-        <Entry x:Name="PasswordEntry" 
-               Placeholder="Leave blank if none" 
-               IsPassword="True"
-               TextChanged="OnPasswordChanged" />
+            <Label Text="Slot Name:" />
+            <Entry x:Name="SlotEntry" 
+                   Placeholder="Player1"
+                   TextChanged="OnSlotChanged" />
 
-        <Button Text="Close" Clicked="OnCloseClicked" />
-    </VerticalStackLayout>
+            <Label Text="Password (optional):" />
+            <Entry x:Name="PasswordEntry" 
+                   Placeholder="Leave blank if none" 
+                   IsPassword="True"
+                   TextChanged="OnPasswordChanged" />
+
+            <BoxView HeightRequest="2" Color="Gray" Margin="0,10,0,10" />
+
+            <Label Text="Data Management" FontSize="20" FontAttributes="Bold" />
+
+            <Button Text="Clear Connection Cache" 
+                    Clicked="OnClearConnectionCacheClicked"
+                    BackgroundColor="Orange"
+                    TextColor="White" />
+
+            <Button Text="Clear Valid Locations" 
+                    Clicked="OnClearValidLocationsClicked"
+                    BackgroundColor="Red"
+                    TextColor="White" />
+
+            <Button Text="Clear Seed Data" 
+                    Clicked="OnClearSeedDataClicked"
+                    BackgroundColor="Red"
+                    TextColor="White" />
+
+            <BoxView HeightRequest="2" Color="Gray" Margin="0,10,0,10" />
+
+            <Button Text="Close" 
+                    Clicked="OnCloseClicked"
+                    BackgroundColor="Gray"
+                    TextColor="White" />
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

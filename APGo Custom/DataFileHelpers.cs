@@ -10,18 +10,19 @@ namespace APGo_Custom
 {
     internal class DataFileHelpers
     {
-
+        public const string SetupLocationsPath = "setup_locations.json";
+        public const string ConnectionCachePath = "connection_cache.json";
         public static async Task SaveSetupLocations(MainPage parent)
         {
             var json = JsonSerializer.Serialize(parent._setupLocations);
-            var filePath = Path.Combine(FileSystem.AppDataDirectory, "setup_locations.json");
+            var filePath = Path.Combine(FileSystem.AppDataDirectory, SetupLocationsPath);
             await File.WriteAllTextAsync(filePath, json);
             System.Diagnostics.Debug.WriteLine($"Saved {parent._setupLocations.Count} locations to: {filePath}");
         }
 
         public static async Task LoadSetupLocations(MainPage parent, WebView Map)
         {
-            var filePath = Path.Combine(FileSystem.AppDataDirectory, "setup_locations.json");
+            var filePath = Path.Combine(FileSystem.AppDataDirectory, SetupLocationsPath);
             System.Diagnostics.Debug.WriteLine($"Looking for locations at: {filePath}");
 
             if (File.Exists(filePath))
@@ -38,6 +39,14 @@ namespace APGo_Custom
                 System.Diagnostics.Debug.WriteLine("No saved locations file found");
             }
         }
+
+        public static void ClearSetupLocations()
+        {
+            var filePath = Path.Combine(FileSystem.AppDataDirectory, SetupLocationsPath);
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
+
         public static async Task SaveSeedMapping(MainPage parent)
         {
             var json = JsonSerializer.Serialize(parent._activeLocationMapping);
@@ -60,17 +69,25 @@ namespace APGo_Custom
             return null;
         }
 
+        public static void RemoveSeedMappings()
+        {
+            if (Directory.Exists(FileSystem.AppDataDirectory))
+                foreach (var i in Directory.GetFiles(FileSystem.AppDataDirectory))
+                    if (Path.GetFileName(i).StartsWith("seed_") && Path.GetFileName(i).EndsWith(".json"))
+                        File.Delete(i);
+        }
+
         public static async Task SaveLastConnectionCache(ConnectionDetails Details)
         {
             var json = JsonSerializer.Serialize(Details);
-            var filePath = Path.Combine(FileSystem.AppDataDirectory, $"connection_cache.json");
+            var filePath = Path.Combine(FileSystem.AppDataDirectory, ConnectionCachePath);
             await File.WriteAllTextAsync(filePath, json);
             System.Diagnostics.Debug.WriteLine($"Chaching Connectiong Success: {Details.Slot}@{Details.Host}:{Details.Port}");
         }
 
         public static async Task<ConnectionDetails?> LoadLastConnectionCache()
         {
-            var filePath = Path.Combine(FileSystem.AppDataDirectory, $"connection_cache.json");
+            var filePath = Path.Combine(FileSystem.AppDataDirectory, ConnectionCachePath);
             if (File.Exists(filePath))
             {
                 var json = await File.ReadAllTextAsync(filePath);
@@ -81,6 +98,12 @@ namespace APGo_Custom
             }
             System.Diagnostics.Debug.WriteLine($"Cache Missing");
             return null;
+        }
+        public static void ClearLastConnectionCache()
+        {
+            var filePath = Path.Combine(FileSystem.AppDataDirectory, ConnectionCachePath);
+            if (File.Exists(filePath))
+                File.Delete(filePath);
         }
     }
 }
