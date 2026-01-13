@@ -85,26 +85,7 @@ public partial class MainPage : ContentPage
         });
     }
 
-    public async void OnLocationButtonClicked(object sender, EventArgs e)
-    {
-        try
-        {
-            var location = await Geolocation.GetLocationAsync(new GeolocationRequest
-            {
-                DesiredAccuracy = GeolocationAccuracy.Best,
-                Timeout = TimeSpan.FromSeconds(10)
-            });
-
-            if (location != null)
-            {
-                await MapWebView.EvaluateJavaScriptAsync($"updateLocation({location.Latitude}, {location.Longitude}, {MarkerRadius});");
-            }
-        }
-        catch (Exception ex)
-        {
-            await DisplayAlert("Error", "Could not get location", "OK");
-        }
-    }
+    public void OnLocationButtonClicked(object sender, EventArgs e) => OpenStreetMapHelpers.FocusCurrentLocation(this, MapWebView);
 
     protected override void OnDisappearing()
     {

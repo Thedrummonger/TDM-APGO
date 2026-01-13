@@ -135,6 +135,28 @@ namespace APGo_Custom
             };
             await tcs.Task;
             await Task.Delay(500); // Small delay to ensure JavaScript is ready
+            FocusCurrentLocation(Parent, Map);
+        }
+
+        public static async void FocusCurrentLocation(MainPage Parent, WebView Map)
+        {
+            try
+            {
+                var location = await Geolocation.GetLocationAsync(new GeolocationRequest
+                {
+                    DesiredAccuracy = GeolocationAccuracy.Best,
+                    Timeout = TimeSpan.FromSeconds(10)
+                });
+
+                if (location != null)
+                {
+                    await Map.EvaluateJavaScriptAsync($"updateLocation({location.Latitude}, {location.Longitude}, {Parent.MarkerRadius});");
+                }
+            }
+            catch (Exception ex)
+            {
+                await Parent.DisplayAlert("Error", "Could not get location", "OK");
+            }
         }
     }
 }
