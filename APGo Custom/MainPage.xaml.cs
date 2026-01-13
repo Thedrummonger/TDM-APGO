@@ -27,6 +27,8 @@ public partial class MainPage : ContentPage
 
     public SettingsPage SettingsPage;
 
+    public (double Lat, double Long)? LastKnownLocation = null;
+
     public MainPage()
     {
         InitializeComponent();

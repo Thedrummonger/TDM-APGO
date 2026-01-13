@@ -60,6 +60,8 @@ namespace APGo_Custom
                     Timestamp = DateTimeOffset.FromUnixTimeMilliseconds(loc.Time)
                 };
 
+                _parent.LastKnownLocation = (location.Latitude, location.Longitude);
+
                 MainThread.BeginInvokeOnMainThread(async () =>
                 {
                     await _map.EvaluateJavaScriptAsync($"updateLocationMarker({location.Latitude}, {location.Longitude}, {_parent.SettingsPage.MarkerRadius});");
@@ -100,6 +102,7 @@ namespace APGo_Custom
                         await Task.Delay(500);
                         continue;
                     }
+                    Parent.LastKnownLocation = (location.Latitude, location.Longitude);
 
                     await MainThread.InvokeOnMainThreadAsync(async () =>
                     {
