@@ -36,17 +36,13 @@
             <BoxView HeightRequest="2" Color="Gray" Margin="0,10,0,10" />
 
             <Label Text="Data Management" FontSize="20" FontAttributes="Bold" />
-            <Button Text="Clear Connection Cache" 
-                    Clicked="OnClearConnectionCacheClicked"
-                    BackgroundColor="Orange"
-                    TextColor="White" />
             <Button Text="Clear Valid Locations" 
                     Clicked="OnClearValidLocationsClicked"
-                    BackgroundColor="Red"
+                    BackgroundColor="Gray"
                     TextColor="White" />
             <Button Text="Clear Seed Data" 
                     Clicked="OnClearSeedDataClicked"
-                    BackgroundColor="Red"
+                    BackgroundColor="Gray"
                     TextColor="White" />
             <BoxView HeightRequest="2" Color="Gray" Margin="0,10,0,10" />
             <Button Text="Close" 

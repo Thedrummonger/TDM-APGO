@@ -58,6 +58,16 @@ namespace APGo_Custom
         public string? Password { get; set; }
     }
 
+    public class UserSettings
+    {
+        public UserSettings() { }
+        public UserSettings(int MarkerRadius)
+        {
+            Radius = MarkerRadius;
+        }
+        public int? Radius { get; set; }
+    }
+
     public class Trip
     {
         [Newtonsoft.Json.JsonProperty("distance_tier")]

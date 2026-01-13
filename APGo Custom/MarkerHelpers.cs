@@ -14,13 +14,12 @@ namespace APGo_Custom
         public static async Task AddMarker(MainPage Parent, WebNavigatingEventArgs e, WebView Map)
         {
             e.Cancel = true;
-            var coords = e.Url.Replace("mapclick://", "");
-            var parts = coords.Split(',');
+            var coords = e.Url.Replace("mapholdclick://", "").Split('/');
 
-            if (parts.Length != 2)
+            if (coords.Length != 2)
                 return;
-            var lat = double.Parse(parts[0]);
-            var lng = double.Parse(parts[1]);
+            var lat = double.Parse(coords[0]);
+            var lng = double.Parse(coords[1]);
 
             var location = new BaseLocation(lat, lng);
             if (Parent._setupLocations.Any(l => l.Id == location.Id))

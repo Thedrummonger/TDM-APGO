@@ -72,7 +72,7 @@
             startY = e.touches[0].clientY;
             pressLatLng = map.containerPointToLatLng([startX, startY]);
             pressTimer = setTimeout(() => {
-                window.location = 'mapholdclick://' + pressLatLng.lat + ',' + pressLatLng.lng;
+                window.location = 'mapholdclick://' + pressLatLng.lat + '/' + pressLatLng.lng;
                 navigator.vibrate?.(50);
             }, 500);
         }, { passive: true });

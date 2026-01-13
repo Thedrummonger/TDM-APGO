@@ -62,7 +62,7 @@ namespace APGo_Custom
 
                 MainThread.BeginInvokeOnMainThread(async () =>
                 {
-                    await _map.EvaluateJavaScriptAsync($"updateLocationMarker({location.Latitude}, {location.Longitude}, {_parent.MarkerRadius});");
+                    await _map.EvaluateJavaScriptAsync($"updateLocationMarker({location.Latitude}, {location.Longitude}, {_parent.SettingsPage.MarkerRadius});");
                     APLocationHelpers.CheckLocationProximity(_parent, _map, location);
                 });
             }
@@ -103,7 +103,7 @@ namespace APGo_Custom
 
                     await MainThread.InvokeOnMainThreadAsync(async () =>
                     {
-                        await Map.EvaluateJavaScriptAsync($"updateLocationMarker({location.Latitude}, {location.Longitude}, {Parent.MarkerRadius});");
+                        await Map.EvaluateJavaScriptAsync($"updateLocationMarker({location.Latitude}, {location.Longitude}, {Parent.SettingsPage.MarkerRadius});");
                         APLocationHelpers.CheckLocationProximity(Parent, Map, location);
                     });
                 }
@@ -150,7 +150,7 @@ namespace APGo_Custom
 
                 if (location != null)
                 {
-                    await Map.EvaluateJavaScriptAsync($"updateLocation({location.Latitude}, {location.Longitude}, {Parent.MarkerRadius});");
+                    await Map.EvaluateJavaScriptAsync($"updateLocation({location.Latitude}, {location.Longitude}, {Parent.SettingsPage.MarkerRadius});");
                 }
             }
             catch (Exception ex)

@@ -4,7 +4,8 @@ public partial class SettingsPage : ContentPage
 {
     private readonly MainPage MainPage;
     private readonly WebView MainMap;
-    public SettingsPage(MainPage parent, ConnectionDetails? connectionCache, WebView Map)
+    public int MarkerRadius = 20;
+    public SettingsPage(MainPage parent, ConnectionDetails? connectionCache, UserSettings? uSerSettings, WebView Map)
     {
         InitializeComponent();
 
@@ -13,13 +14,15 @@ public partial class SettingsPage : ContentPage
         SlotName = connectionCache?.Slot ?? string.Empty;
         Password = connectionCache?.Password ?? string.Empty;
 
+        MarkerRadius = uSerSettings?.Radius ?? 20;
+
         MainPage = parent;
         ServerEntry.Text = ServerAddress;
         PortEntry.Text = Port.ToString();
         SlotEntry.Text = SlotName;
         PasswordEntry.Text = Password;
-        ProximitySlider.Value = parent.MarkerRadius;
-        ProximityLabel.Text = $"Proximity Range: {parent.MarkerRadius} meters";
+        ProximitySlider.Value = MarkerRadius;
+        ProximityLabel.Text = $"Proximity Range: {MarkerRadius} meters";
         MainMap = Map;
     }   
 
@@ -57,7 +60,19 @@ public partial class SettingsPage : ContentPage
     private async void OnCloseClicked(object sender, EventArgs e)
     {
         await Navigation.PopModalAsync();
-        OpenStreetMapHelpers.FocusCurrentLocation(MainPage, MainMap);
+
+        await DataFileHelpers.SaveUserSettings(new UserSettings(MarkerRadius));
+
+        var location = await Geolocation.GetLocationAsync(new GeolocationRequest
+        {
+            DesiredAccuracy = GeolocationAccuracy.Best,
+            Timeout = TimeSpan.FromSeconds(10)
+        });
+
+        if (location != null)
+        {
+            await MainMap.EvaluateJavaScriptAsync($"updateLocationMarker({location.Latitude}, {location.Longitude}, {MarkerRadius});");
+        }
     }
 
     private async void OnClearConnectionCacheClicked(object sender, EventArgs e)
@@ -116,6 +131,6 @@ public partial class SettingsPage : ContentPage
     {
         int value = (int)e.NewValue;
         ProximityLabel.Text = $"Proximity Range: {value} meters";
-        MainPage.MarkerRadius = value;
+        MarkerRadius = value;
     }
 }

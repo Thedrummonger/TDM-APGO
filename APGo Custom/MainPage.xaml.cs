@@ -18,11 +18,9 @@ public partial class MainPage : ContentPage
     public bool _mapLoaded = false;
     public Timer? _refreshTimer = null;
     public bool _needsRefresh = false;
-    private Queue<Archipelago.MultiClient.Net.MessageLog.Messages.LogMessage> _chatMessageQueue = new();
+    public Queue<object> _chatMessageQueue = new();
     private Timer? _chatProcessTimer = null;
     private const int MaxMessagesPerSecond = 10;
-
-    public int MarkerRadius = 20;
 
     public HashSet<char> GoalItemsRecieved = [];
     public GoalSetting GoalSetting = GoalSetting.option_short_macguffin;
@@ -38,7 +36,8 @@ public partial class MainPage : ContentPage
     private async Task InitializeAsync()
     {
         var ConnectionCache = await DataFileHelpers.LoadLastConnectionCache();
-        SettingsPage = new SettingsPage(this, ConnectionCache, MapWebView);
+        var USerSettings = await DataFileHelpers.LoadUserSettings();
+        SettingsPage = new SettingsPage(this, ConnectionCache, USerSettings, MapWebView);
         await OpenStreetMapHelpers.LoadMapAsync(this, MapWebView);
         await DataFileHelpers.LoadSetupLocations(this, MapWebView);
         OpenStreetMapHelpers.StartLocationTracking(this, MapWebView);
@@ -157,7 +156,7 @@ public partial class MainPage : ContentPage
         await Navigation.PushModalAsync(SettingsPage);
     }
 
-    public void OnArchipelagoMessageReceived(Archipelago.MultiClient.Net.MessageLog.Messages.LogMessage message)
+    public void OnArchipelagoMessageReceived(LogMessage message)
     {
         if (message is HintItemSendLogMessage)
             _needsRefresh = true;
@@ -210,27 +209,31 @@ public partial class MainPage : ContentPage
         _isAtBottom = e.ScrollY >= scrollHeight - 50;
     }
 
-    private void AddChatMessage(Archipelago.MultiClient.Net.MessageLog.Messages.LogMessage message)
+    private void AddChatMessage(object message)
     {
         var label = new Label
         {
             Padding = new Thickness(5),
             LineBreakMode = LineBreakMode.WordWrap
         };
-
-        var formattedString = new FormattedString();
-
-        foreach (var part in message.Parts)
+        if (message is LogMessage APLogMessage)
         {
-            var span = new Span
+            var formattedString = new FormattedString();
+            foreach (var part in APLogMessage.Parts)
             {
-                Text = part.Text,
-                TextColor = Color.FromRgb(part.Color.R, part.Color.G, part.Color.B)
-            };
-            formattedString.Spans.Add(span);
+                var span = new Span
+                {
+                    Text = part.Text,
+                    TextColor = Color.FromRgb(part.Color.R, part.Color.G, part.Color.B)
+                };
+                formattedString.Spans.Add(span);
+            }
+            label.FormattedText = formattedString;
         }
-
-        label.FormattedText = formattedString;
+        else
+        {
+            label.Text = message.ToString();
+        }
         ChatMessages.Add(label);
     }
 

@@ -1,10 +1,4 @@
-﻿using Microsoft.Maui.Platform;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
+﻿using System.Text.Json;
 
 namespace APGo_Custom
 {
@@ -12,6 +6,24 @@ namespace APGo_Custom
     {
         public const string SetupLocationsPath = "setup_locations.json";
         public const string ConnectionCachePath = "connection_cache.json";
+        public const string UserSettingsPath = "user_settings.json";
+        public static async Task SaveUserSettings(UserSettings settingsData)
+        {
+            var json = JsonSerializer.Serialize(settingsData);
+            var filePath = Path.Combine(FileSystem.AppDataDirectory, UserSettingsPath);
+            await File.WriteAllTextAsync(filePath, json);
+        }
+        public static async Task<UserSettings> LoadUserSettings()
+        {
+            var filePath = Path.Combine(FileSystem.AppDataDirectory, UserSettingsPath);
+
+            if (File.Exists(filePath))
+            {
+                var json = await File.ReadAllTextAsync(filePath);
+                return JsonSerializer.Deserialize<UserSettings>(json) ?? new UserSettings();
+            }
+            return new UserSettings();
+        }
         public static async Task SaveSetupLocations(MainPage parent)
         {
             var json = JsonSerializer.Serialize(parent._setupLocations);

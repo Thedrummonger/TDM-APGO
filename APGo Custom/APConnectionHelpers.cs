@@ -57,8 +57,10 @@ namespace APGo_Custom
 
         public static async Task ConnectToArchipelago(MainPage parent, WebView Map, ConnectionDetails connectionDetails, Button ConnetionButton)
         {
+            ConnetionButton.Text = "🟡";
             try
             {
+                parent._chatMessageQueue.Enqueue($"Connecting to {connectionDetails.Slot}@{connectionDetails.Host ?? ""}:{connectionDetails.Port ?? 0}");
                 parent._session = ArchipelagoSessionFactory.CreateSession(connectionDetails.Host ?? "", connectionDetails.Port ?? 0);
                 var result = parent._session.TryConnectAndLogin("Archipela-Go!", connectionDetails.Slot,
                     Archipelago.MultiClient.Net.Enums.ItemsHandlingFlags.AllItems, password: connectionDetails.Password);
@@ -67,6 +69,7 @@ namespace APGo_Custom
                 {
                     await parent.DisplayAlert("Connection Failed", string.Join("\n", failure.Errors), "OK");
                     parent._session = null;
+                    ConnetionButton.Text = "🔴";
                     return;
                 }
 
@@ -77,6 +80,7 @@ namespace APGo_Custom
 
                 await DataFileHelpers.SaveLastConnectionCache(connectionDetails);
 
+                parent._chatMessageQueue.Enqueue($"Successfully connected to Archipelago!");
                 //await parent.DisplayAlert("Connected", "Successfully connected to Archipelago!", "OK");
 
                 Dictionary<string, APLocation>? savedMapping = await DataFileHelpers.LoadSeedMapping(parent._currentRoomHash);
@@ -91,14 +95,16 @@ namespace APGo_Custom
                     var slotData = parent._session.DataStorage.GetSlotData();
                     if (!slotData.TryGetValue("trips", out var tripsData) || tripsData is not JObject tripsObj)
                     {
-                        await parent.DisplayAlert("Error", "Could not parse trips data in slot data", "OK");
+                        parent._chatMessageQueue.Enqueue($"Could not parse trips data in slot data!");
+                        //await parent.DisplayAlert("Error", "Could not parse trips data in slot data", "OK");
                         await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
                         return;
                     }
                     var trips = tripsObj.ToObject<Dictionary<string, Trip>>();
                     if (!slotData.TryGetValue("goal", out var goalData) || goalData is not long goalVal)
                     {
-                        await parent.DisplayAlert("Error", "Could not parse Goal data in slot data", "OK");
+                        parent._chatMessageQueue.Enqueue($"Could not parse Goal data in slot data!");
+                        //await parent.DisplayAlert("Error", "Could not parse Goal data in slot data", "OK");
                         await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
                         return;
                     }
@@ -107,7 +113,8 @@ namespace APGo_Custom
 
                     if (trips == null || trips.Count == 0)
                     {
-                        await parent.DisplayAlert("Error", "Failed to parse trips data", "OK");
+                        parent._chatMessageQueue.Enqueue($"Failed to parse trips data!");
+                        //await parent.DisplayAlert("Error", "Failed to parse trips data", "OK");
                         await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
                         return;
                     }
@@ -132,7 +139,8 @@ namespace APGo_Custom
             }
             catch (Exception ex)
             {
-                await parent.DisplayAlert("Error", $"Failed to connect: {ex.Message}", "OK");
+                parent._chatMessageQueue.Enqueue($"Failed to connect: {ex.Message}");
+                //await parent.DisplayAlert("Error", $"Failed to connect: {ex.Message}", "OK");
                 await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
                 parent._session = null;
             }
@@ -161,6 +169,7 @@ namespace APGo_Custom
             // Clear markers from map
             await Map.EvaluateJavaScriptAsync("clearAllMarkers();");
 
+            parent._chatMessageQueue.Enqueue($"Disconnected from Archipelago");
             //await parent.DisplayAlert("Disconnected", "Disconnected from Archipelago", "OK");
 
             await MarkerHelpers.RenderTemplateLocations(parent, Map);
