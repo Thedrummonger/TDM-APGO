@@ -18,6 +18,8 @@ public partial class SettingsPage : ContentPage
         PortEntry.Text = Port.ToString();
         SlotEntry.Text = SlotName;
         PasswordEntry.Text = Password;
+        ProximitySlider.Value = parent.MarkerRadius;
+        ProximityLabel.Text = $"Proximity Range: {parent.MarkerRadius} meters";
         MainMap = Map;
     }   
 
@@ -55,6 +57,7 @@ public partial class SettingsPage : ContentPage
     private async void OnCloseClicked(object sender, EventArgs e)
     {
         await Navigation.PopModalAsync();
+        OpenStreetMapHelpers.FocusCurrentLocation(MainPage, MainMap);
     }
 
     private async void OnClearConnectionCacheClicked(object sender, EventArgs e)
@@ -107,5 +110,12 @@ public partial class SettingsPage : ContentPage
 
         if (confirm)
             DataFileHelpers.RemoveSeedMappings();
+    }
+
+    private void OnProximityChanged(object sender, ValueChangedEventArgs e)
+    {
+        int value = (int)e.NewValue;
+        ProximityLabel.Text = $"Proximity Range: {value} meters";
+        MainPage.MarkerRadius = value;
     }
 }
