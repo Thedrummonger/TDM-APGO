@@ -53,7 +53,20 @@ namespace APGo_Custom
                 stringBuilder.AppendLine().AppendLine($"Containes {Item} for {RecievingPlayer.Name} playing {RecievingPlayer.Game} ({Usefullness})");
             }
 
-            await parent.DisplayAlert(Data.ArchipelagoLocationName, stringBuilder.ToString(), "OK");
+            //await parent.DisplayAlert(Data.ArchipelagoLocationName, stringBuilder.ToString(), "OK");
+            var dialog = new CustomDialog(Data.ArchipelagoLocationName, stringBuilder.ToString(), "Mark Complete", "Get Hint", "Close");
+
+            await parent.Navigation.PushModalAsync(dialog);
+            var result = await dialog.ShowAsync();
+
+            if (result == "Mark Complete")
+            {
+                //NYI
+            }
+            else if (result == "Get Hint")
+            {
+                parent._session.Say($"!hint_location {Data.ArchipelagoLocationName}");
+            }
 
         }
 
