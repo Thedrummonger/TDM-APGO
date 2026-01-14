@@ -19,11 +19,11 @@ namespace APGo_Custom
             switch (parent.GoalSetting)
             {
                 case GoalSetting.option_one_hard_travel:
-                    if (parent._activeLocationMapping.Count == 0) return false;
-                    var AllCheckedLocations = parent._session!.Locations.AllLocationsChecked;
-                    var MaxDistanceTier = parent._activeLocationMapping.Select(x => x.Value.DistanceTier).Max();
-                    var AllMaxDistanceLocations = parent._activeLocationMapping.Values.Where(x => x.DistanceTier == MaxDistanceTier);
-                    return AllMaxDistanceLocations.Any(x => AllCheckedLocations.Contains(x.ArchipelagoLocationId));
+                    //if (parent._activeLocationMapping.Count == 0) return false;
+                    //var AllCheckedLocations = parent._session!.Locations.AllLocationsChecked;
+                    //var MaxDistanceTier = parent._activeLocationMapping.Select(x => x.Value.DistanceTier).Max();
+                    //var AllMaxDistanceLocations = parent._activeLocationMapping.Values.Where(x => x.DistanceTier == MaxDistanceTier);
+                    //return AllMaxDistanceLocations.Any(x => AllCheckedLocations.Contains(x.ArchipelagoLocationId));
                 case GoalSetting.option_allsanity:
                     if (parent._session!.Locations.AllLocations.Count == 0) return false;
                     return parent._session.Locations.AllLocationsChecked.Count == parent._session.Locations.AllLocations.Count;
