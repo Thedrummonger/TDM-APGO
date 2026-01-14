@@ -72,11 +72,11 @@ namespace APGo_Custom
                 if (withinRange)
                 {
                     if (!await TryCheckLocation(parent, Data.Id, Map))
-                        parent.AddChatMessage("Missing Keys for this location!");
+                        await parent.DisplayAlert("Could not check location!", $"Missing {Data.KeysRequired - GetCurrentKeyCount(parent)} Keys for this location!", "ok");
                 }
                 else
                 {
-                    parent.AddChatMessage($"Location was not within range! Move {Distance - parent.SettingsPage?.MarkerRadius??0}M closer!");
+                    await parent.DisplayAlert("Could not Check Location!", $"Location was not within range!\n\nMove ~{Math.Round(Distance - (parent.SettingsPage?.MarkerRadius ?? 0))} meters closer!", "ok");
                 }
 
             }

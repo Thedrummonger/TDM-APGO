@@ -51,17 +51,17 @@
                 <Button Grid.Column="0"
                         Text="Clear" 
                         Clicked="OnClearValidLocationsClicked"
-                        BackgroundColor="Red"
+                        BackgroundColor="Grey"
                         TextColor="White" />
                 <Button Grid.Column="1"
                         Text="Export" 
                         Clicked="OnExportValidLocationsClicked"
-                        BackgroundColor="Orange"
+                        BackgroundColor="Grey"
                         TextColor="White" />
                 <Button Grid.Column="2"
                         Text="Load" 
                         Clicked="OnLoadValidLocationsClicked"
-                        BackgroundColor="Green"
+                        BackgroundColor="Grey"
                         TextColor="White" />
             </Grid>
 
@@ -71,17 +71,17 @@
                 <Button Grid.Column="0"
                         Text="Clear" 
                         Clicked="OnClearSeedDataClicked"
-                        BackgroundColor="Red"
+                        BackgroundColor="Grey"
                         TextColor="White" />
                 <Button Grid.Column="1"
                         Text="Export" 
                         Clicked="OnExportSeedDataClicked"
-                        BackgroundColor="Orange"
+                        BackgroundColor="Grey"
                         TextColor="White" />
                 <Button Grid.Column="2"
                         Text="Load" 
                         Clicked="OnLoadSeedDataClicked"
-                        BackgroundColor="Green"
+                        BackgroundColor="Grey"
                         TextColor="White" />
             </Grid>
         </VerticalStackLayout>
