@@ -112,9 +112,11 @@
             }
         }
         function clearAllMarkers() {
-            for (var id in markers) {
-                map.removeLayer(markers[id]);
-            }
+            map.eachLayer(function (layer) {
+                if (layer instanceof L.CircleMarker && layer !== userMarker) {
+                    map.removeLayer(layer);
+                }
+            });
             markers = {};
         }
         function checkProximity(userLat, userLng, distanceMeters) {

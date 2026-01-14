@@ -44,7 +44,7 @@ namespace APGo_Custom
 
                 parent._setupLocations = JsonSerializer.Deserialize<List<BaseLocation>>(json) ?? new List<BaseLocation>();
                 System.Diagnostics.Debug.WriteLine($"Loaded {parent._setupLocations.Count} locations");
-                await MarkerHelpers.RenderTemplateLocations(parent, Map);
+                MarkerHelpers.RenderTemplateLocations(parent, Map);
             }
             else
             {

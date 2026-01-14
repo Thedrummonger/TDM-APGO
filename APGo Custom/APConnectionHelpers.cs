@@ -57,12 +57,15 @@ namespace APGo_Custom
 
         public static async Task ConnectToArchipelago(MainPage parent, WebView Map, ConnectionDetails connectionDetails, Button ConnetionButton)
         {
-            try
+            await MainThread.InvokeOnMainThreadAsync(async () =>
             {
                 ConnetionButton.Text = "🟡";
                 parent.AddChatMessage($"Connecting to {connectionDetails.Slot}@{connectionDetails.Host ?? ""}:{connectionDetails.Port ?? 0}");
+                await Task.Yield();
+            });
+            try
+            {
                 parent._session = ArchipelagoSessionFactory.CreateSession(connectionDetails.Host ?? "", connectionDetails.Port ?? 0);
-                await Task.Delay(200);
                 var result = parent._session.TryConnectAndLogin("Archipela-Go!", connectionDetails.Slot,
                     Archipelago.MultiClient.Net.Enums.ItemsHandlingFlags.AllItems, password: connectionDetails.Password);
 
@@ -125,7 +128,7 @@ namespace APGo_Custom
                         return;
                     }
                 }
-                await MarkerHelpers.RenderActiveLocations(parent, Map);
+                MarkerHelpers.RenderActiveLocations(parent, Map);
                 parent._session.Items.ItemReceived += parent.OnItemReceived;
                 parent._session.Locations.CheckedLocationsUpdated += parent.OnLocationsChecked;
                 parent._session.MessageLog.OnMessageReceived += parent.OnArchipelagoMessageReceived;
@@ -169,7 +172,7 @@ namespace APGo_Custom
             parent.AddChatMessage($"Disconnected from Archipelago");
             //await parent.DisplayAlert("Disconnected", "Disconnected from Archipelago", "OK");
 
-            await MarkerHelpers.RenderTemplateLocations(parent, Map);
+            MarkerHelpers.RenderTemplateLocations(parent, Map);
         }
     }
 }

@@ -44,7 +44,7 @@ namespace APGo_Custom
             if (!parent._activeLocationMapping.TryGetValue(locationId, out var Data))
                 return;
             StringBuilder stringBuilder = new StringBuilder($"Keys Required {Data.KeysRequired}\nDistance Tier {Data.DistanceTier}");
-            if (Data.IsLocationHinted(parent._session!, out var Hint))
+            if (Data.IsLocationHinted(parent._session!, parent._session!.CreateHintCache(), out var Hint))
             {
                 var RecievingPlayer = parent._session!.Players.GetPlayerInfo(Hint!.ReceivingPlayer);
                 var Item = parent._session.Items.GetItemName(Hint!.ItemId, RecievingPlayer.Game);
@@ -229,12 +229,13 @@ namespace APGo_Custom
             return true;
         }
 
-        public static bool IsLocationHinted(this APLocation location, ArchipelagoSession session, out Hint? hint)
+        public static bool IsLocationHinted(this APLocation location, ArchipelagoSession session, Dictionary<string, Hint> HintCache, out Hint? hint)
         {
-            var Hints = session.DataStorage.GetHints();
             var CurrentPlayer = session.Players.ActivePlayer.Slot;
-            hint = Hints.FirstOrDefault(x => x.FindingPlayer == CurrentPlayer && x.LocationId == location.ArchipelagoLocationId);
-            return hint is not null;
+            return HintCache.TryGetValue($"{CurrentPlayer}|{location.ArchipelagoLocationId}", out hint);
         }
+
+        public static Dictionary<string, Hint> CreateHintCache(this ArchipelagoSession session) =>
+            session.DataStorage.GetHints().ToDictionary(x => $"{x.FindingPlayer}|{x.LocationId}", x => x);
     }
 }

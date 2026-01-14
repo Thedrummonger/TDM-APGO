@@ -1,4 +1,5 @@
 ﻿using Archipelago.MultiClient.Net;
+using Archipelago.MultiClient.Net.Models;
 using Microsoft.Maui.Platform;
 using System;
 using System.Collections.Generic;
@@ -63,11 +64,10 @@ namespace APGo_Custom
         }
 
 
-        public static (string border, string fill) GetMarkerColor(ArchipelagoSession session, APLocation location)
+        public static (string border, string fill) GetMarkerColor(ArchipelagoSession session, APLocation location, int CurrentKeyCount, Dictionary<string, Hint> HintCache)
         {
-            var CurrentKeyCount = session.Items.AllItemsReceived.Where(x => x.ItemName == "Progressive Key").Count();
             var IsUnlocked = location.KeysRequired <= CurrentKeyCount;
-            var IsHinted = APLocationHelpers.IsLocationHinted(location, session, out _);
+            var IsHinted = APLocationHelpers.IsLocationHinted(location, session, HintCache, out _);
             return (IsHinted, IsUnlocked) switch
             {
                 (true, true) => ("darkblue", "blue"),
@@ -77,41 +77,34 @@ namespace APGo_Custom
             };
         }
 
-        public static async Task RenderTemplateLocations(MainPage parent, WebView Map)
+        public static void RenderTemplateLocations(MainPage parent, WebView Map)
         {
             foreach (var loc in parent._setupLocations)
             {
-                await Map.EvaluateJavaScriptAsync(
+                _ = Map.EvaluateJavaScriptAsync(
                     $"addMarker({loc.Latitude}, {loc.Longitude}, '{loc.Id}', 'darkorange', 'orange');");
             }
         }
 
-        public static async Task RenderActiveLocations(MainPage Parent, WebView Map)
+        public static void RenderActiveLocations(MainPage Parent, WebView Map)
         {
             if (Parent._session == null) return;
 
-            var checkedLocations = Parent._session.Locations.AllLocationsChecked;
+            HashSet<long> checkedLocations = [..Parent._session.Locations.AllLocationsChecked];
             var CurrentKeyCount = Parent._session.Items.AllItemsReceived.Where(x => x.ItemName == "Progressive Key").Count();
+            var HintCache = Parent._session.CreateHintCache();
 
             foreach (var mapping in Parent._activeLocationMapping)
             {
                 var setupLocation = mapping.Value;
-                if (setupLocation == null)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Warning: Could not find setup location for ID {mapping.Key}");
-                    continue;
-                }
 
-                if (checkedLocations.Contains(mapping.Value.ArchipelagoLocationId))
-                {
-                    System.Diagnostics.Debug.WriteLine($"Location {setupLocation.ArchipelagoLocationName} already checked, skipping");
+                if (checkedLocations.Contains(setupLocation.ArchipelagoLocationId))
                     continue;
-                }
-                (string borderColor, string fillColor) = MarkerHelpers.GetMarkerColor(Parent._session, setupLocation);
-                await Map.EvaluateJavaScriptAsync(
+
+                (string borderColor, string fillColor) = MarkerHelpers.GetMarkerColor(Parent._session, setupLocation, CurrentKeyCount, HintCache);
+
+                _ = Map.EvaluateJavaScriptAsync(
                     $"addMarker({setupLocation.Latitude}, {setupLocation.Longitude}, '{setupLocation.Id}', '{borderColor}', '{fillColor}');");
-
-                System.Diagnostics.Debug.WriteLine($"Rendered {setupLocation.ArchipelagoLocationName} (Keys: {setupLocation.KeysRequired})");
             }
         }
     }

@@ -171,7 +171,7 @@ public partial class SettingsPage : ContentPage
             MainPage._setupLocations = _setupLocations;
             await DataFileHelpers.SaveSetupLocations(MainPage);
             await MainMap.EvaluateJavaScriptAsync("clearAllMarkers();");
-            await MarkerHelpers.RenderTemplateLocations(MainPage, MainMap);
+            MarkerHelpers.RenderTemplateLocations(MainPage, MainMap);
             await DisplayAlert("Success", "Loaded Saved Locations", "OK");
         }
         else
@@ -205,7 +205,7 @@ public partial class SettingsPage : ContentPage
         MainPage._activeLocationMapping = _activeSeedLocations;
         await DataFileHelpers.SaveSeedMapping(MainPage);
         await MainMap.EvaluateJavaScriptAsync("clearAllMarkers();");
-        await MarkerHelpers.RenderActiveLocations(MainPage, MainMap);
+        MarkerHelpers.RenderActiveLocations(MainPage, MainMap);
         await DisplayAlert("Success", "Loaded Seed Data", "OK");
 
         bool LocationsMatch()

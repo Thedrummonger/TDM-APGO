@@ -65,6 +65,8 @@ public partial class MainPage : ContentPage
             Debug.WriteLine("Refreshing map markers");
 
             var checkedLocations = _session!.Locations.AllLocationsChecked;
+            var CurrentKeyCount = _session.Items.AllItemsReceived.Where(x => x.ItemName == "Progressive Key").Count();
+            var HintCache = _session.CreateHintCache();
 
             foreach (var mapping in _activeLocationMapping)
             {
@@ -74,7 +76,7 @@ public partial class MainPage : ContentPage
                     continue;
                 }
 
-                (string borderColor, string fillColor) = MarkerHelpers.GetMarkerColor(_session, mapping.Value);
+                (string borderColor, string fillColor) = MarkerHelpers.GetMarkerColor(_session, mapping.Value, CurrentKeyCount, HintCache);
                 await MapWebView.EvaluateJavaScriptAsync($"updateMarkerColor('{mapping.Value.Id}', '{borderColor}', '{fillColor}');");
             }
 
