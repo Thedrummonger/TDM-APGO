@@ -29,6 +29,9 @@ public partial class MainPage : ContentPage
 
     public (double Lat, double Long)? LastKnownLocation = null;
 
+    public bool HasActiveAP => _session != null && _session.Socket.Connected;
+    public bool IsInReconnectState => _session != null && !_session.Socket.Connected;
+
     public MainPage()
     {
         InitializeComponent();
@@ -108,7 +111,7 @@ public partial class MainPage : ContentPage
             if (_session == null)
                 await MarkerHelpers.RemoveMarker(this, e, MapWebView);
             else
-                await APLocationHelpers.DisplayLocationDetails(this, e);
+                await APLocationHelpers.DisplayLocationDetails(this, MapWebView, e);
         }
     }
 

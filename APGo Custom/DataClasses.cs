@@ -30,15 +30,17 @@ namespace APGo_Custom
         public long ArchipelagoLocationId { get; set; } = -1;
         public string ArchipelagoLocationName { get; set; } = "";
         public int KeysRequired { get; set; } = 0;
+        public int DistanceTier { get; set; } = 0;
 
         public APLocation() { }
-        public APLocation(BaseLocation location, long APLocID, string APLocName, int keys)
+        public APLocation(BaseLocation location, long APLocID, string APLocName, int keys, int distTier)
         {
             Latitude = location.Latitude;
             Longitude = location.Longitude;
             ArchipelagoLocationId = APLocID;
             ArchipelagoLocationName = APLocName;
             KeysRequired = keys;
+            DistanceTier = distTier;
         }
     }
 

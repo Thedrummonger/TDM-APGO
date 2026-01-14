@@ -65,7 +65,7 @@ namespace APGo_Custom
                 MainThread.BeginInvokeOnMainThread(async () =>
                 {
                     await _map.EvaluateJavaScriptAsync($"updateLocationMarker({location.Latitude}, {location.Longitude}, {_parent.SettingsPage.MarkerRadius});");
-                    APLocationHelpers.CheckLocationProximity(_parent, _map, location);
+                    APLocationHelpers.CheckLocationsInRange(_parent, _map, location);
                 });
             }
         }
@@ -107,7 +107,7 @@ namespace APGo_Custom
                     await MainThread.InvokeOnMainThreadAsync(async () =>
                     {
                         await Map.EvaluateJavaScriptAsync($"updateLocationMarker({location.Latitude}, {location.Longitude}, {Parent.SettingsPage.MarkerRadius});");
-                        APLocationHelpers.CheckLocationProximity(Parent, Map, location);
+                        APLocationHelpers.CheckLocationsInRange(Parent, Map, location);
                     });
                 }
                 catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Debug: Error\n{ex.Message}"); }
@@ -162,19 +162,21 @@ namespace APGo_Custom
             }
         }
 
-        public static (bool withinRange, double distance) CheckIfWithinRange(MainPage parent,double targetLat,double targetLong,double checkRadius)
+        public static (bool withinRange, double distance) CheckIfWithinRange(MainPage parent, double targetLat, double targetLong, double checkRadius) =>
+            parent.LastKnownLocation == null ? (false, -1) :
+            CheckIfWithinRange(parent.LastKnownLocation.Value.Lat, parent.LastKnownLocation.Value.Long, targetLat, targetLong, checkRadius);
+
+        public static (bool withinRange, double distance) CheckIfWithinRange(double userLat, double userLong, double targetLat,double targetLong,double checkRadius)
         {
-            if (parent.LastKnownLocation == null)
-                return (false, -1);
-
-            var (lat, lon) = parent.LastKnownLocation.Value;
-
-            double distance = CalculateDistance(lat, lon, targetLat, targetLong);
-
-            return (distance <= checkRadius, distance);
+            double distance = CalculateDistance(userLat, userLong, targetLat, targetLong);
+            var InRange = distance > -1 && distance <= checkRadius;
+            return (InRange, distance);
         }
 
-        private static double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
+        public static double CalculateDistance(MainPage parent, double lat2, double lon2) =>
+            parent.LastKnownLocation == null ? -1 : CalculateDistance(parent.LastKnownLocation.Value.Lat, parent.LastKnownLocation.Value.Long, lat2, lon2);
+
+        public static double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
         {
             const double R = 6371000; // Earth's radius in meters
             var dLat = ToRadians(lat2 - lat1);
