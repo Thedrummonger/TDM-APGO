@@ -59,12 +59,12 @@ public partial class MainPage : ContentPage
                 await APConnectionHelpers.DisconnectFromArchipelago(this, MapWebView, ConnectionButton);
                 return;
             }
-            if (!_needsRefresh || _session is null) return;
+            if (!_needsRefresh || !HasActiveAP) return;
 
             _needsRefresh = false;
             Debug.WriteLine("Refreshing map markers");
 
-            var checkedLocations = _session.Locations.AllLocationsChecked;
+            var checkedLocations = _session!.Locations.AllLocationsChecked;
 
             foreach (var mapping in _activeLocationMapping)
             {
