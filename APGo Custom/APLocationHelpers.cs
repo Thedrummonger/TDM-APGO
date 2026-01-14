@@ -15,17 +15,18 @@ namespace APGo_Custom
         public const string ShortGoal = "Ap-Go!";
         public static bool HasGoal(MainPage parent)
         {
-            if (parent._session == null || !parent._session.Socket.Connected) return false;
+            if (!parent.HasActiveAP) return false;
             switch (parent.GoalSetting)
             {
                 case GoalSetting.option_one_hard_travel:
-                    return false; //IDK how this one is calculated, unsupported for now
+                    if (parent._activeLocationMapping.Count == 0) return false;
+                    var AllCheckedLocations = parent._session!.Locations.AllLocationsChecked;
+                    var MaxDistanceTier = parent._activeLocationMapping.Select(x => x.Value.DistanceTier).Max();
+                    var AllMaxDistanceLocations = parent._activeLocationMapping.Values.Where(x => x.DistanceTier == MaxDistanceTier);
+                    return AllMaxDistanceLocations.Any(x => AllCheckedLocations.Contains(x.ArchipelagoLocationId));
                 case GoalSetting.option_allsanity:
-                    //Do some saftey checks for this one to make sure we don't goal early. Just checking AllMissingLocations could be dangerous
-                    //If it is not initialized and is 0. Also make sure AllLocations is initialized before comapring to AllLocationsChecked 
-                    return
-                        parent._session.Locations.AllLocations.Count > 0 && 
-                        parent._session.Locations.AllLocationsChecked.Count == parent._session.Locations.AllLocations.Count; ;
+                    if (parent._session!.Locations.AllLocations.Count == 0) return false;
+                    return parent._session.Locations.AllLocationsChecked.Count == parent._session.Locations.AllLocations.Count;
                 case GoalSetting.option_short_macguffin:
                     return ShortGoal.All(parent.GoalItemsRecieved.Contains);
                 case GoalSetting.option_long_macguffin:
