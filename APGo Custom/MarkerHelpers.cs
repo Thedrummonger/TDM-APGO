@@ -1,11 +1,5 @@
 ﻿using Archipelago.MultiClient.Net;
 using Archipelago.MultiClient.Net.Models;
-using Microsoft.Maui.Platform;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace APGo_Custom
 {
@@ -23,23 +17,29 @@ namespace APGo_Custom
             var lng = double.Parse(coords[1]);
 
             var location = new BaseLocation(lat, lng);
-            if (Parent._setupLocations.Any(l => l.Id == location.Id))
+            if (Parent._setupLocations.Any(l => l.Id == location.Id) || (Parent.AnchorMarker is not null && Parent.AnchorMarker.Id == location.Id))
             {
                 await Parent.DisplayAlert("Duplicate", "A marker already exists at this location!", "OK");
                 return;
             }
 
-            bool answer = await Parent.DisplayAlert("Add Location",
-            $"Add marker at this location?\nLat: {lat}\nLng: {lng}",
-            "Yes", "No");
+            var dialog = new CustomDialog("Add Location", $"Add marker at this location?\nLat: {lat}\nLng: {lng}", "Valid Location", "Anchor Location", "Cancel");
+            await Parent.Navigation.PushModalAsync(dialog);
+            var result = await dialog.ShowAsync();
 
-            if (answer)
+
+            if (result == "Valid Location")
             {
                 Parent._setupLocations.Add(location);
-
-                await Map.EvaluateJavaScriptAsync($"addMarker({lat}, {lng}, '{location.Id}', 'darkorange', 'orange');");
-
+                await Map.EvaluateJavaScriptAsync($"addMarker({lat}, {lng}, '{location.Id}', 'goldenrod', 'yellow');");
                 await DataFileHelpers.SaveSetupLocations(Parent);
+            }
+            else if (result == "Anchor")
+            {
+                if (Parent.AnchorMarker != null)
+                    await Map.EvaluateJavaScriptAsync($"removeMarker('{Parent.AnchorMarker.Id}');");
+                Parent.AnchorMarker = location;
+                await Map.EvaluateJavaScriptAsync($"addMarker({lat}, {lng}, '{Parent.AnchorMarker.Id}', 'darkcyan', 'cyan');");
             }
         }
 
@@ -48,8 +48,10 @@ namespace APGo_Custom
             e.Cancel = true;
             var locationId = e.Url.Replace("markerclick://", "");
 
+            bool IsAnchor = Parent.AnchorMarker != null && Parent.AnchorMarker.Id == locationId;
+
             bool answer = await Parent.DisplayAlert("Remove Marker",
-                "Do you want to remove this marker?",
+                $"Do you want to remove {(IsAnchor ? "the anchor" : "This")} marker?",
                 "Yes", "No");
             if (!answer)
                 return;
@@ -59,7 +61,10 @@ namespace APGo_Custom
                 Parent._setupLocations.Remove(location);
                 await DataFileHelpers.SaveSetupLocations(Parent);
             }
-
+            else if (IsAnchor)
+            {
+                Parent.AnchorMarker = null;
+            }
             await Map.EvaluateJavaScriptAsync($"removeMarker('{locationId}');");
         }
 
@@ -82,8 +87,10 @@ namespace APGo_Custom
             foreach (var loc in parent._setupLocations)
             {
                 _ = Map.EvaluateJavaScriptAsync(
-                    $"addMarker({loc.Latitude}, {loc.Longitude}, '{loc.Id}', 'darkorange', 'orange');");
+                    $"addMarker({loc.Latitude}, {loc.Longitude}, '{loc.Id}', 'goldenrod', 'yellow');");
             }
+            if (parent.AnchorMarker != null)
+                _ = Map.EvaluateJavaScriptAsync($"addMarker({parent.AnchorMarker.Latitude}, {parent.AnchorMarker.Longitude}, '{parent.AnchorMarker.Id}', 'darkcyan', 'cyan');");
         }
 
         public static void RenderActiveLocations(MainPage Parent, WebView Map)

@@ -28,6 +28,7 @@ public partial class MainPage : ContentPage
     public SettingsPage SettingsPage;
 
     public (double Lat, double Long)? LastKnownLocation = null;
+    public BaseLocation? AnchorMarker = null;
 
     public bool HasActiveAP => _session != null && _session.Socket.Connected;
     public bool IsInReconnectState => _session != null && !_session.Socket.Connected;

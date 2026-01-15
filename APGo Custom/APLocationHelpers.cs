@@ -163,7 +163,9 @@ namespace APGo_Custom
                 return false;
             }
 
-            if (parent.LastKnownLocation == null)
+            var AnchorLocation = parent.AnchorMarker != null ? (parent.AnchorMarker.Latitude, parent.AnchorMarker.Longitude) : parent.LastKnownLocation;
+
+            if (AnchorLocation == null)
             {
                 await parent.DisplayAlert("Error", "Could not get current location", "OK");
                 return false;
@@ -185,7 +187,7 @@ namespace APGo_Custom
                 return false;
             }
 
-            var ValidSetupLocations = parent._setupLocations.Where(x => LocationInYamlRange(parent, x));
+            var ValidSetupLocations = parent._setupLocations.Where(x => LocationInYamlRange(parent, x, AnchorLocation.Value.Lat, AnchorLocation.Value.Long));
 
             if (ValidSetupLocations.Count() < trips.Count)
             {
@@ -205,7 +207,7 @@ namespace APGo_Custom
             var shuffledSetupLocations = ValidSetupLocations
                 .OrderBy(x => random.Next())
                 .Take(trips.Count)
-                .OrderBy(x => OpenStreetMapHelpers.CalculateDistance(parent, x.Latitude, x.Longitude))
+                .OrderBy(x => OpenStreetMapHelpers.CalculateDistance(AnchorLocation.Value.Lat, AnchorLocation.Value.Long, x.Latitude, x.Longitude))
                 .ToArray();
 
             trips = trips.OrderBy(x => x.Value.DistanceTier).ToDictionary();
@@ -241,16 +243,12 @@ namespace APGo_Custom
             return true;
         }
 
-        private static bool LocationInYamlRange(MainPage parent, BaseLocation location)
+        private static bool LocationInYamlRange(MainPage parent, BaseLocation location, double AnchorLat, double AnchorLong)
         {
-            if (parent.LastKnownLocation == null)
-                return false;
-
             if (!parent.SettingsPage.UserSettings.UseMinDist && !parent.SettingsPage.UserSettings.UseMaxDist)
                 return true;
 
-            var (Lat, Long) = parent.LastKnownLocation.Value;
-            var Dist = OpenStreetMapHelpers.CalculateDistance(Lat, Long, location.Latitude, location.Longitude);
+            var Dist = OpenStreetMapHelpers.CalculateDistance(AnchorLat, AnchorLong, location.Latitude, location.Longitude);
 
             if (parent.SettingsPage.UserSettings.UseMinDist && Dist < parent.SettingsPage.YamlMinimumDistance)
                 return false;

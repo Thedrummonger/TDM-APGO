@@ -173,9 +173,6 @@ namespace APGo_Custom
             return (InRange, distance);
         }
 
-        public static double CalculateDistance(MainPage parent, double lat2, double lon2) =>
-            parent.LastKnownLocation == null ? -1 : CalculateDistance(parent.LastKnownLocation.Value.Lat, parent.LastKnownLocation.Value.Long, lat2, lon2);
-
         public static double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
         {
             const double R = 6371000; // Earth's radius in meters
