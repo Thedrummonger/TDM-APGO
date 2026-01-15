@@ -100,7 +100,6 @@ namespace APGo_Custom
                     if (!slotData.TryGetValue("trips", out var tripsData) || tripsData is not JObject tripsObj)
                     {
                         parent.AddChatMessage($"Could not parse trips data in slot data!");
-                        //await parent.DisplayAlert("Error", "Could not parse trips data in slot data", "OK");
                         await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
                         return;
                     }
@@ -108,16 +107,30 @@ namespace APGo_Custom
                     if (!slotData.TryGetValue("goal", out var goalData) || goalData is not long goalVal)
                     {
                         parent.AddChatMessage($"Could not parse Goal data in slot data!");
-                        //await parent.DisplayAlert("Error", "Could not parse Goal data in slot data", "OK");
                         await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
                         return;
                     }
                     parent.GoalSetting = (GoalSetting)goalVal;
 
+                    if (!slotData.TryGetValue("minimum_distance", out var minDist) || minDist is not long minDistVal)
+                    {
+                        parent.AddChatMessage($"Could not parse Minimum Distance in slot data!");
+                        await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
+                        return;
+                    }
+                    parent.SettingsPage.YamlMinimumDistance = (int)minDistVal;
+
+                    if (!slotData.TryGetValue("maximum_distance", out var maxDist) || maxDist is not long maxDistVal)
+                    {
+                        parent.AddChatMessage($"Could not parse Maximum Distance in slot data!");
+                        await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
+                        return;
+                    }
+                    parent.SettingsPage.YamlMaximumDistance = (int)maxDistVal;
+
                     if (trips == null || trips.Count == 0)
                     {
                         parent.AddChatMessage($"Failed to parse trips data!");
-                        //await parent.DisplayAlert("Error", "Failed to parse trips data", "OK");
                         await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
                         return;
                     }

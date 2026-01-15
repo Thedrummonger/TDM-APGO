@@ -6,64 +6,57 @@ public partial class SettingsPage : ContentPage
 {
     private readonly MainPage MainPage;
     private readonly WebView MainMap;
-    public int MarkerRadius = 20;
+    public int YamlMinimumDistance = 500;
+    public int YamlMaximumDistance = 5000;
     public SettingsPage(MainPage parent, ConnectionDetails? connectionCache, UserSettings? uSerSettings, WebView Map)
     {
         InitializeComponent();
 
-        ServerAddress = connectionCache?.Host ?? "archipelago.gg";
-        Port = connectionCache?.Port ?? 38281;
-        SlotName = connectionCache?.Slot ?? string.Empty;
-        Password = connectionCache?.Password ?? string.Empty;
-
-        MarkerRadius = uSerSettings?.Radius ?? 20;
+        UserSettings = uSerSettings ?? new UserSettings();
+        ConnectionDetails = connectionCache ?? new ConnectionDetails();
 
         MainPage = parent;
-        ServerEntry.Text = ServerAddress;
-        PortEntry.Text = Port.ToString();
-        SlotEntry.Text = SlotName;
-        PasswordEntry.Text = Password;
-        ProximitySlider.Value = MarkerRadius;
-        ProximityLabel.Text = $"Proximity Range: {MarkerRadius} meters";
+        ServerEntry.Text = ConnectionDetails.Host;
+        PortEntry.Text = ConnectionDetails.Port.ToString();
+        SlotEntry.Text = ConnectionDetails.Slot;
+        PasswordEntry.Text = ConnectionDetails.Password;
+
+        ProximitySlider.Value = UserSettings.Radius;
+        UseYamlMaxDistanceSwitch.IsToggled = UserSettings.UseMaxDist;
+        UseYamlMinDistanceSwitch.IsToggled = UserSettings.UseMinDist;
+        ProximityLabel.Text = $"Proximity Range: {UserSettings.Radius} meters";
         MainMap = Map;
     }   
 
-    public string ServerAddress;
-    public int Port;
-    public string SlotName;
-    public string Password;
-
-    public ConnectionDetails GetConnectionDetails()
-    {
-        return new ConnectionDetails(ServerAddress, Port, SlotName, Password);
-    }
+    public UserSettings UserSettings { get; }
+    public ConnectionDetails ConnectionDetails { get; }
 
     private void OnServerChanged(object sender, TextChangedEventArgs e)
     {
-        ServerAddress = e.NewTextValue;
+        ConnectionDetails.Host = e.NewTextValue;
     }
 
     private void OnPortChanged(object sender, TextChangedEventArgs e)
     {
         if (int.TryParse(e.NewTextValue, out var newPort))
-            Port = newPort;
+            ConnectionDetails.Port = newPort;
     }
 
     private void OnSlotChanged(object sender, TextChangedEventArgs e)
     {
-        SlotName = e.NewTextValue;
+        ConnectionDetails.Slot = e.NewTextValue;
     }
 
     private void OnPasswordChanged(object sender, TextChangedEventArgs e)
     {
-        Password = e.NewTextValue;
+        ConnectionDetails.Password = e.NewTextValue;
     }
 
     private async void OnCloseClicked(object sender, EventArgs e)
     {
         await Navigation.PopModalAsync();
 
-        await DataFileHelpers.SaveUserSettings(new UserSettings(MarkerRadius));
+        await DataFileHelpers.SaveUserSettings(UserSettings);
 
         var location = await Geolocation.GetLocationAsync(new GeolocationRequest
         {
@@ -73,7 +66,7 @@ public partial class SettingsPage : ContentPage
 
         if (location != null)
         {
-            await MainMap.EvaluateJavaScriptAsync($"updateLocationMarker({location.Latitude}, {location.Longitude}, {MarkerRadius});");
+            await MainMap.EvaluateJavaScriptAsync($"updateLocationMarker({location.Latitude}, {location.Longitude}, {UserSettings.Radius});");
         }
     }
 
@@ -129,11 +122,21 @@ public partial class SettingsPage : ContentPage
             DataFileHelpers.RemoveSeedMappings();
     }
 
-    private void OnProximityChanged(object sender, ValueChangedEventArgs e)
+    private void OnProximitySliderChanged(object sender, ValueChangedEventArgs e)
     {
         int value = (int)e.NewValue;
         ProximityLabel.Text = $"Proximity Range: {value} meters";
-        MarkerRadius = value;
+        UserSettings.Radius = value;
+    }
+
+    private void OnUseMaxDistanceToggled(object sender, ToggledEventArgs e)
+    {
+        UserSettings.UseMaxDist = e.Value;
+    }
+
+    private void OnUseMinDistanceToggled(object sender, ToggledEventArgs e)
+    {
+        UserSettings.UseMinDist = e.Value;
     }
 
     private async void OnExportValidLocationsClicked(object sender, EventArgs e)

@@ -63,11 +63,9 @@ namespace APGo_Custom
     public class UserSettings
     {
         public UserSettings() { }
-        public UserSettings(int MarkerRadius)
-        {
-            Radius = MarkerRadius;
-        }
-        public int? Radius { get; set; }
+        public int Radius { get; set; } = 20;
+        public bool UseMinDist { get; set; } = true;
+        public bool UseMaxDist { get; set; } = true;
     }
 
     public class Trip

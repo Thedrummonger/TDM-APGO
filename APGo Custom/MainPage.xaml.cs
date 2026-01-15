@@ -133,8 +133,7 @@ public partial class MainPage : ContentPage
         else
         {
             //await APConnectionHelpers.ShowConnectionDialog(this, MapWebView, ConnectionButton);
-            var TempConnectionDetails = new ConnectionDetails(SettingsPage.ServerAddress, SettingsPage.Port, SettingsPage.SlotName, SettingsPage.Password);
-            await APConnectionHelpers.ConnectToArchipelago(this, MapWebView, TempConnectionDetails, ConnectionButton);
+            await APConnectionHelpers.ConnectToArchipelago(this, MapWebView, SettingsPage.ConnectionDetails, ConnectionButton);
         }
     }
     

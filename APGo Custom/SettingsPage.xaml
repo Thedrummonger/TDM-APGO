@@ -37,11 +37,28 @@
                    IsPassword="True"
                    TextChanged="OnPasswordChanged" />
             <BoxView HeightRequest="2" Color="Gray" Margin="0,10,0,10" />
+            <Label Text="User Settings" FontSize="20" FontAttributes="Bold" />
             <Label x:Name="ProximityLabel" Text="Proximity Range:" />
             <Slider x:Name="ProximitySlider"
                     Minimum="5"
                     Maximum="60"
-                    ValueChanged="OnProximityChanged" />
+                    ValueChanged="OnProximitySliderChanged" />
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10" Margin="0,5,0,0">
+                <Switch x:Name="UseYamlMaxDistanceSwitch"
+                        Grid.Column="0"
+                        Toggled="OnUseMaxDistanceToggled" />
+                <Label Grid.Column="1"
+                       Text="Use YAML Max Distance"
+                       VerticalOptions="Center" />
+            </Grid>
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                <Switch x:Name="UseYamlMinDistanceSwitch"
+                        Grid.Column="0"
+                        Toggled="OnUseMinDistanceToggled" />
+                <Label Grid.Column="1"
+                       Text="Use YAML Min Distance"
+                       VerticalOptions="Center" />
+            </Grid>
             <BoxView HeightRequest="2" Color="Gray" Margin="0,10,0,10" />
             <Label Text="Data Management" FontSize="20" FontAttributes="Bold" />
 

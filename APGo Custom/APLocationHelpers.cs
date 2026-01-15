@@ -68,7 +68,7 @@ namespace APGo_Custom
             }
             else if (result == "Check Location")
             {
-                var (withinRange, Distance) = OpenStreetMapHelpers.CheckIfWithinRange(parent, Data.Latitude, Data.Longitude, parent.SettingsPage?.MarkerRadius ?? 0);
+                var (withinRange, Distance) = OpenStreetMapHelpers.CheckIfWithinRange(parent, Data.Latitude, Data.Longitude, parent.SettingsPage?.UserSettings.Radius ?? 0);
                 if (withinRange)
                 {
                     if (!await TryCheckLocation(parent, Data.Id, Map))
@@ -76,7 +76,7 @@ namespace APGo_Custom
                 }
                 else
                 {
-                    await parent.DisplayAlert("Could not Check Location!", $"Location was not within range!\n\nMove ~{Math.Round(Distance - (parent.SettingsPage?.MarkerRadius ?? 0))} meters closer!", "ok");
+                    await parent.DisplayAlert("Could not Check Location!", $"Location was not within range!\n\nMove ~{Math.Round(Distance - (parent.SettingsPage?.UserSettings.Radius ?? 0))} meters closer!", "ok");
                 }
 
             }
@@ -88,7 +88,7 @@ namespace APGo_Custom
             if (parent._session == null)
                 return;
 
-            var result = await Map.EvaluateJavaScriptAsync($"checkProximity({GeoLocation.Latitude}, {GeoLocation.Longitude}, {parent.SettingsPage.MarkerRadius});");
+            var result = await Map.EvaluateJavaScriptAsync($"checkProximity({GeoLocation.Latitude}, {GeoLocation.Longitude}, {parent.SettingsPage.UserSettings.Radius});");
             var cleanResult = result?.Trim('"') ?? "";
 
             if (string.IsNullOrEmpty(cleanResult))
@@ -169,6 +169,13 @@ namespace APGo_Custom
                 return false;
             }
 
+            if (parent._setupLocations.Count < trips.Count)
+            {
+                await parent.DisplayAlert("Error", $"You have not defined enough location {parent._setupLocations.Count} " +
+                    $"for needed trips {trips.Count}.\nCreated at least {trips.Count - parent._setupLocations.Count} more locations", "OK");
+                return false;
+            }
+
             // Get all AP locations for our game
             var allAPLocations = parent._session!.Locations.AllLocations;
 
@@ -177,20 +184,25 @@ namespace APGo_Custom
                 await parent.DisplayAlert("Error", "Could not find trip data for all locations", "OK");
                 return false;
             }
-            if (parent._setupLocations.Count < trips.Count)
+
+            var ValidSetupLocations = parent._setupLocations.Where(x => LocationInYamlRange(parent, x));
+
+            if (ValidSetupLocations.Count() < trips.Count)
             {
-                await parent.DisplayAlert("Error", $"You have not defined enough location {parent._setupLocations.Count} " +
-                    $"for needed trips {trips.Count}.\nCreated at least {trips.Count - parent._setupLocations.Count} more locations", "OK");
+                var remaining = trips.Count - ValidSetupLocations.Count();
+                await parent.DisplayAlert("Error", "There are not enough valid locations in the range defined by your yaml" +
+                    $"Create {remaining} additional locations within range or disable the yaml range limit in settings", "OK");
                 return false;
             }
 
             System.Diagnostics.Debug.WriteLine($"Total AP locations: {allAPLocations.Count}");
             System.Diagnostics.Debug.WriteLine($"Total setup locations: {parent._setupLocations.Count}");
+            System.Diagnostics.Debug.WriteLine($"Total Valid setup locations: {ValidSetupLocations.Count()}");
             System.Diagnostics.Debug.WriteLine($"Total trips: {trips.Count}");
 
             // Randomly shuffle setup locations
             var random = new Random();
-            var shuffledSetupLocations = parent._setupLocations
+            var shuffledSetupLocations = ValidSetupLocations
                 .OrderBy(x => random.Next())
                 .Take(trips.Count)
                 .OrderBy(x => OpenStreetMapHelpers.CalculateDistance(parent, x.Latitude, x.Longitude))
@@ -226,6 +238,26 @@ namespace APGo_Custom
             }
 
             await DataFileHelpers.SaveSeedMapping(parent);
+            return true;
+        }
+
+        private static bool LocationInYamlRange(MainPage parent, BaseLocation location)
+        {
+            if (parent.LastKnownLocation == null)
+                return false;
+
+            if (!parent.SettingsPage.UserSettings.UseMinDist && !parent.SettingsPage.UserSettings.UseMaxDist)
+                return true;
+
+            var (Lat, Long) = parent.LastKnownLocation.Value;
+            var Dist = OpenStreetMapHelpers.CalculateDistance(Lat, Long, location.Latitude, location.Longitude);
+
+            if (parent.SettingsPage.UserSettings.UseMinDist && Dist < parent.SettingsPage.YamlMinimumDistance)
+                return false;
+
+            if (parent.SettingsPage.UserSettings.UseMaxDist && Dist > parent.SettingsPage.YamlMaximumDistance)
+                return false;
+
             return true;
         }
 
