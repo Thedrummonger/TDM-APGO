@@ -31,7 +31,7 @@ namespace APGo_Custom
             if (result == "Valid Location")
             {
                 Parent._setupLocations.Add(location);
-                await Map.EvaluateJavaScriptAsync($"addMarker({lat}, {lng}, '{location.Id}', 'goldenrod', 'yellow');");
+                await Map.EvaluateJavaScriptAsync($"addMarker({lat}, {lng}, '{location.Id}', '{MarkerColors.TemplateMarker.border}', '{MarkerColors.TemplateMarker.fill}');");
                 await DataFileHelpers.SaveSetupLocations(Parent);
             }
             else if (result == "Anchor")
@@ -39,7 +39,7 @@ namespace APGo_Custom
                 if (Parent.AnchorMarker != null)
                     await Map.EvaluateJavaScriptAsync($"removeMarker('{Parent.AnchorMarker.Id}');");
                 Parent.AnchorMarker = location;
-                await Map.EvaluateJavaScriptAsync($"addMarker({lat}, {lng}, '{Parent.AnchorMarker.Id}', 'darkcyan', 'cyan');");
+                await Map.EvaluateJavaScriptAsync($"addMarker({lat}, {lng}, '{Parent.AnchorMarker.Id}', '{MarkerColors.AnchorMarker.border}', '{MarkerColors.AnchorMarker.fill}');");
             }
         }
 
@@ -75,10 +75,10 @@ namespace APGo_Custom
             var IsHinted = APLocationHelpers.IsLocationHinted(location, session, HintCache, out _);
             return (IsHinted, IsUnlocked) switch
             {
-                (true, true) => ("darkblue", "blue"),
-                (true, false) => ("purple", "mediumpurple"),
-                (false, true) => ("darkgreen", "green"),
-                (false, false) => ("darkred", "red")
+                (true, true) => MarkerColors.AvailableHinted,
+                (true, false) => MarkerColors.LockedHinted,
+                (false, true) => MarkerColors.Available,
+                (false, false) => MarkerColors.Locked
             };
         }
 
@@ -87,10 +87,10 @@ namespace APGo_Custom
             foreach (var loc in parent._setupLocations)
             {
                 _ = Map.EvaluateJavaScriptAsync(
-                    $"addMarker({loc.Latitude}, {loc.Longitude}, '{loc.Id}', 'goldenrod', 'yellow');");
+                    $"addMarker({loc.Latitude}, {loc.Longitude}, '{loc.Id}', '{MarkerColors.TemplateMarker.border}', '{MarkerColors.TemplateMarker.fill}');");
             }
             if (parent.AnchorMarker != null)
-                _ = Map.EvaluateJavaScriptAsync($"addMarker({parent.AnchorMarker.Latitude}, {parent.AnchorMarker.Longitude}, '{parent.AnchorMarker.Id}', 'darkcyan', 'cyan');");
+                _ = Map.EvaluateJavaScriptAsync($"addMarker({parent.AnchorMarker.Latitude}, {parent.AnchorMarker.Longitude}, '{parent.AnchorMarker.Id}', '{MarkerColors.AnchorMarker.border}', '{MarkerColors.AnchorMarker.fill}');");
         }
 
         public static void RenderActiveLocations(MainPage Parent, WebView Map)

@@ -2,7 +2,15 @@
 
 namespace APGo_Custom
 {
-
+    public static class MarkerColors
+    {
+        public static readonly (string border, string fill) AnchorMarker = ("darkcyan", "cyan");
+        public static readonly (string border, string fill) TemplateMarker = ("goldenrod", "yellow");
+        public static readonly (string border, string fill) AvailableHinted = ("darkblue", "blue");
+        public static readonly (string border, string fill) LockedHinted = ("purple", "mediumpurple");
+        public static readonly (string border, string fill) Available = ("darkgreen", "green");
+        public static readonly (string border, string fill) Locked = ("darkred", "red");
+    }
     public enum GoalSetting
     {
         option_one_hard_travel = 0,
