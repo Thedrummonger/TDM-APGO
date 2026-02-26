@@ -14,47 +14,6 @@ namespace APGo_Custom
     internal class APConnectionHelpers
     {
 
-        public static async Task ShowConnectionDialog(MainPage parent, WebView Map, Button ConnetionButton)
-        {
-            var ConnectionCache = await DataFileHelpers.LoadLastConnectionCache();
-
-            string HostPlaceHolder = ConnectionCache is null || string.IsNullOrWhiteSpace(ConnectionCache.Host) ?
-                "archipelago.gg" : ConnectionCache.Host;
-            string PortPlaceholder = (ConnectionCache is null || ConnectionCache.Port is null || ConnectionCache.Port.Value < 1) ?
-                "38281" : ConnectionCache.Port.Value.ToString();
-            string SlotPlaceholder = (ConnectionCache is null || string.IsNullOrWhiteSpace(ConnectionCache.Slot)) ?
-                "" : ConnectionCache.Slot;
-            string PassPlaceholder = (ConnectionCache is null || string.IsNullOrWhiteSpace(ConnectionCache.Password)) ?
-                "" : ConnectionCache.Password;
-
-            string address = await parent.DisplayPromptAsync("Connect", "Server Address:",
-                initialValue: HostPlaceHolder,
-                placeholder: "archipelago.gg");
-
-            if (string.IsNullOrWhiteSpace(address))
-                return;
-
-            string portStr = await parent.DisplayPromptAsync("Connect", "Port:",
-                initialValue: PortPlaceholder,
-                keyboard: Keyboard.Numeric);
-
-            if (string.IsNullOrWhiteSpace(portStr) || !int.TryParse(portStr, out int port))
-                return;
-
-            string slotName = await parent.DisplayPromptAsync("Connect", "Slot Name:",
-                initialValue: SlotPlaceholder,
-                placeholder: "Player1");
-
-            if (string.IsNullOrWhiteSpace(slotName))
-                return;
-
-            string password = await parent.DisplayPromptAsync("Connect", "Password (optional):",
-                initialValue: PassPlaceholder,
-                placeholder: "Leave blank if none");
-
-            await ConnectToArchipelago(parent, Map, new ConnectionDetails(address, port, slotName, password ?? ""), ConnetionButton);
-        }
-
         public static async Task ConnectToArchipelago(MainPage parent, WebView Map, ConnectionDetails connectionDetails, Button ConnetionButton)
         {
             await MainThread.InvokeOnMainThreadAsync(async () =>
@@ -65,6 +24,7 @@ namespace APGo_Custom
             });
             try
             {
+                parent.IsConnecting = true;
                 parent._session = ArchipelagoSessionFactory.CreateSession(connectionDetails.Host ?? "", connectionDetails.Port ?? 0);
                 var result = parent._session.TryConnectAndLogin("Archipela-Go!", connectionDetails.Slot,
                     Archipelago.MultiClient.Net.Enums.ItemsHandlingFlags.AllItems, password: connectionDetails.Password);
@@ -87,16 +47,41 @@ namespace APGo_Custom
                 parent.AddChatMessage($"Successfully connected to Archipelago!");
                 //await parent.DisplayAlert("Connected", "Successfully connected to Archipelago!", "OK");
 
+                var slotData = parent._session.DataStorage.GetSlotData();
+
+                if (!slotData.TryGetValue("goal", out var goalData) || goalData is not long goalVal)
+                {
+                    parent.AddChatMessage($"Could not parse Goal data in slot data!");
+                    await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
+                    return;
+                }
+                parent.GoalSetting = (GoalSetting)goalVal;
+
+                if (!slotData.TryGetValue("minimum_distance", out var minDist) || minDist is not long minDistVal)
+                {
+                    parent.AddChatMessage($"Could not parse Minimum Distance in slot data!");
+                    await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
+                    return;
+                }
+                parent.SettingsPage.YamlMinimumDistance = (int)minDistVal;
+
+                if (!slotData.TryGetValue("maximum_distance", out var maxDist) || maxDist is not long maxDistVal)
+                {
+                    parent.AddChatMessage($"Could not parse Maximum Distance in slot data!");
+                    await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
+                    return;
+                }
+                parent.SettingsPage.YamlMaximumDistance = (int)maxDistVal;
+
                 Dictionary<string, APLocation>? savedMapping = await DataFileHelpers.LoadSeedMapping(parent._currentRoomHash);
 
                 if (savedMapping != null)
                 {
                     parent._activeLocationMapping = savedMapping;
-                    System.Diagnostics.Debug.WriteLine($"Loaded existing mapping with {parent._activeLocationMapping.Count} locations");
+                    Debug.WriteLine($"Loaded existing mapping with {parent._activeLocationMapping.Count} locations");
                 }
                 else
                 {
-                    var slotData = parent._session.DataStorage.GetSlotData();
                     if (!slotData.TryGetValue("trips", out var tripsData) || tripsData is not JObject tripsObj)
                     {
                         parent.AddChatMessage($"Could not parse trips data in slot data!");
@@ -104,29 +89,6 @@ namespace APGo_Custom
                         return;
                     }
                     var trips = tripsObj.ToObject<Dictionary<string, Trip>>();
-                    if (!slotData.TryGetValue("goal", out var goalData) || goalData is not long goalVal)
-                    {
-                        parent.AddChatMessage($"Could not parse Goal data in slot data!");
-                        await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
-                        return;
-                    }
-                    parent.GoalSetting = (GoalSetting)goalVal;
-
-                    if (!slotData.TryGetValue("minimum_distance", out var minDist) || minDist is not long minDistVal)
-                    {
-                        parent.AddChatMessage($"Could not parse Minimum Distance in slot data!");
-                        await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
-                        return;
-                    }
-                    parent.SettingsPage.YamlMinimumDistance = (int)minDistVal;
-
-                    if (!slotData.TryGetValue("maximum_distance", out var maxDist) || maxDist is not long maxDistVal)
-                    {
-                        parent.AddChatMessage($"Could not parse Maximum Distance in slot data!");
-                        await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
-                        return;
-                    }
-                    parent.SettingsPage.YamlMaximumDistance = (int)maxDistVal;
 
                     if (trips == null || trips.Count == 0)
                     {
@@ -157,10 +119,12 @@ namespace APGo_Custom
                 await DisconnectFromArchipelago(parent, Map, ConnetionButton, true);
                 parent._session = null;
             }
+            parent.IsConnecting = false;
         }
 
         public static async Task DisconnectFromArchipelago(MainPage parent, WebView Map, Button ConnetionButton, bool Early = false)
         {
+            parent.IsConnecting = false;
             if (parent._session != null)
             {
                 if (!Early)

@@ -21,6 +21,7 @@ public partial class MainPage : ContentPage
     public Queue<object> _chatMessageQueue = new();
     private Timer? _chatProcessTimer = null;
     private const int MaxMessagesPerSecond = 10;
+    public bool IsConnecting = false;
 
     public HashSet<char> GoalItemsRecieved = [];
     public GoalSetting GoalSetting = GoalSetting.option_short_macguffin;
@@ -135,6 +136,7 @@ public partial class MainPage : ContentPage
         {
             //await APConnectionHelpers.ShowConnectionDialog(this, MapWebView, ConnectionButton);
             await APConnectionHelpers.ConnectToArchipelago(this, MapWebView, SettingsPage.ConnectionDetails, ConnectionButton);
+            _needsRefresh = true;
         }
     }
     
