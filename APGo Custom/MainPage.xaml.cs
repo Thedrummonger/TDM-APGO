@@ -98,7 +98,7 @@ public partial class MainPage : ContentPage
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
-        _isTracking = false;
+        //_isTracking = false;
     }
 
     public async void OnMapNavigating(object? sender, WebNavigatingEventArgs e)
