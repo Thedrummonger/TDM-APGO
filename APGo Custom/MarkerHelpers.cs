@@ -34,7 +34,7 @@ namespace APGo_Custom
                 await Map.EvaluateJavaScriptAsync($"addMarker({lat}, {lng}, '{location.Id}', '{MarkerColors.TemplateMarker.border}', '{MarkerColors.TemplateMarker.fill}');");
                 await DataFileHelpers.SaveSetupLocations(Parent);
             }
-            else if (result == "Anchor")
+            else if (result == "Anchor Location")
             {
                 if (Parent.AnchorMarker != null)
                     await Map.EvaluateJavaScriptAsync($"removeMarker('{Parent.AnchorMarker.Id}');");
